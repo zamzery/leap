@@ -1,0 +1,391 @@
+var tabla;
+var tablaProductos;
+
+//función que se ejecuta al inicio
+function init() {
+	mostrarform( false );
+	listar();
+
+	$( "#formulario" ).on( "submit", function ( e ) {
+		guardaryeditar( e );
+	} );
+
+	$( "#formFactura" ).on( "submit", function ( e ) {
+		guardaryeditar_factura( e );
+	} );
+
+	$.post( "../ajax/cliente.php?op=select_cliente", function ( r ) {
+		$( "#clienteID" ).html( r );
+		$( '#clienteID' ).selectpicker( 'refresh' );
+
+		$( "#clienteID_factura" ).html( r );
+		$( '#clienteID_factura' ).selectpicker( 'refresh' );
+	} );
+
+	$(document).ready(function(){
+			$( "#modalFacturas" ).on( "hidden.bs.modal", function () {
+			$( "#pedido_id_factura" ).val( "");
+			$( "#facturaID" ).val( "" );
+			$( "#moneda" ).val( "USD" );
+			$( "#tipoCambio" ).val( "1" );
+			$( "#clienteID_factura" ).val( "0" );
+			$( "#clienteID_factura" ).selectpicker( 'refresh' );
+			$( "#telefono" ).val( "" );
+			$( "#calle" ).val( "" );
+			$( "#num_ext" ).val( "" );
+			$( "#num_int" ).val( "" );
+			$( "#colonia" ).val( "" );
+			$( "#poblacion" ).val( "" );
+			$( "#edoPais" ).val( "" );
+			$( "#cp" ).val( "00000" );
+			$( "#razonSocial" ).val( "" );
+			$( "#rfcCliente" ).val( "" );
+			$( "#regimenFiscal" ).val( "626" );
+			$( "#regimenFiscal" ).selectpicker( 'refresh' );
+			$( "#num_cuenta" ).val( "" );
+			$( "#banco" ).val( "" );
+			$( "#metodoPago" ).val( "" );
+			$( "#metodoPago" ).selectpicker('refresh');
+			$( "#formadePago" ).val( "" );
+			$( "#formadePago" ).selectpicker( 'refresh' );
+			$( "#usoCfdi" ).val( "" );
+			$( "#usoCfdi" ).selectpicker( 'refresh' );
+			$( "#comentarios" ).val( "" );
+			$( "#btnGuardarFactura" ).prop( "disabled", false );
+		} );
+	} );
+}
+
+//Función limpiar
+function limpiar() {
+	$( "#pedidoID" ).val( "" );
+	$( "#nombre" ).val( "" );
+	$( "#precioVenta" ).val( "" );
+	$( "#medida_id" ).val( "" );
+	$( "#medida_id" ).selectpicker( 'refresh' );
+	$( "#clave_id" ).val( "" );
+	$( "#clave_id" ).selectpicker( 'refresh' );
+	$( "#observaciones" ).val( "" );
+	$( "#sku" ).val( "" );
+	$( "#imagenActual" ).val( "" );
+	$( "#imagen" ).val( "" );
+	$( "#imagenMuestra" ).hide();
+	$( "#imagenMuestra" ).html( "" ).attr( "" );
+}
+
+//Función mostrar formulario
+function mostrarform( flag ) {
+	if ( flag ) {
+		$( ".listadoregistros" ).hide();
+		$( ".formularioregistros" ).show();
+		$( "#btnGuardar" ).prop( "disabled", false );
+	} else {
+		$( ".listadoregistros" ).show();
+		$( ".formularioregistros" ).hide();
+	}
+}
+
+//Función para cancelar el formulario
+function cancelarform() {
+	limpiar();
+	mostrarform( false );
+}
+
+//Función listar
+function listar() {
+	tabla = $( '#tbllistado' ).dataTable( {
+		"aProcessing": true, //Se activa el procesamiento del datatable
+		"aServerSide": true, //Se pagina y filtra por medio del servidor
+		dom: "f<'row'<'col-sm-2'B><'col-sm-1'l><'col-sm-9'p>> rt <'bottom'ip<'clear'>>",//Se definen los elementos de control de la tabla
+		buttons: [
+			{extend: 'excelHtml5', title: 'Listado de Productos', exportOptions: {columns: [ 0, 1, 2, 3 ]}, className: 'btn btn-sm btn-primary'},
+			{extend: 'pdf', title: 'Listado de Productos', exportOptions: {columns: [ 0, 1, 2, 3 ]}, className: 'btn btn-sm btn-primary'},
+		],
+
+		"ajax": {
+			url: '../ajax/pedido.php?op=listar',
+			type: "get",
+			dataType: "json",
+			error: function ( e ) {
+				console.log( e.responseText );
+			}
+		},
+		"createdRow": function ( row, data, dataIndex ) {
+			if ( data[ 1 ] == '<span class="badge bg-danger">Desactivado</span>' ) {
+				$( row ).addClass( 'table-danger' );
+			}
+		},
+		"columnDefs": [
+			{"width": "140px", "targets": [ 3, 6 ]},
+			{"width": "80px", "targets": [ 0, 1, 4, 5 ]},
+			{"className": "text-center", "targets": [ 0, 1, 4, 5, 6 ]},
+			{"className": "text-end", "targets": [ 3 ]},
+		],
+		"Destroy": true,
+		"iDisplayLength": 25, //Número de registros para paginar
+		"order": [ [ 1, "desc" ] ] //Ordenar (columna, orden ascendente o descendente, etc)
+	} ).DataTable();
+}
+
+function guardaryeditar( e ) {
+	e.preventDefault(); //Para que no se active la acción predeterminada del evento
+	$( "#btnGuardar" ).prop( "disabled", true );
+	var formData = new FormData( $( "#formulario" )[ 0 ] );
+
+	$.ajax( {
+		url: "../ajax/pedido.php?op=guardaryeditar",
+		type: "POST",
+		data: formData,
+		contentType: false,
+		processData: false,
+
+		success: function ( datos ) {
+			bootbox.alert( datos );
+			mostrarform( false );
+			tabla.clear().draw();
+			tabla.ajax.reload();
+		}
+	} );
+	limpiar();
+}
+
+function guardaryeditar_factura( e ) {
+	e.preventDefault(); //Para que no se active la acción predeterminada del evento
+	$( "#btnGuardarFactura" ).prop( "disabled", true );
+	var formData = new FormData( $( "#formFactura" )[ 0 ] );
+
+	$.ajax( {
+		url: "../ajax/pedido.php?op=guardaryeditar_factura",
+		type: "POST",
+		data: formData,
+		contentType: false,
+		processData: false,
+
+		success: function ( datos ) {
+			bootbox.alert( datos );
+			tabla.clear().draw();
+			tabla.ajax.reload();
+			$( "#modalFacturas" ).modal( "hide" );
+			$( "#btnGuardarFactura" ).prop( "disabled", false );
+		},
+		error: function ( xhr, status, error ) {
+			bootbox.alert( "Error al guardar la factura: " + error );
+			$( "#btnGuardarFactura" ).prop( "disabled", false );
+		}
+	} );
+}
+
+function mostrar( pedidoID ) {
+	$.post( "../ajax/pedido.php?op=mostrar", {pedidoID: pedidoID}, function ( data, statusUsuario ) {
+		data = JSON.parse( data );
+		mostrarform( true );
+		$( "#pedidoID" ).val( data.pedidoID );
+		$( "#fecha" ).val( data.fecha );
+		$( "#clienteID" ).val( data.clienteID );
+		$( "#clienteID" ).selectpicker( 'refresh' );
+		$( "#nombreCliente" ).val( data.nombreCliente );
+		$( "#observaciones" ).val( data.observaciones );
+	} );
+
+	$.post( "../ajax/pedido.php?op=mostrarDetalles", {pedidoID: pedidoID}, function ( data, statusUsuario ) {
+		$("#detalles").html(data);
+	});
+}
+
+function modalProductos( pedidoID ) {
+	$( "#pedidoID_variante" ).val( pedidoID );
+	$( "#modalProductos" ).modal( "show" );
+	ver_productos( pedidoID );
+	$( "#modalProductos" ).on( "hidden.bs.modal", function () {
+		$( "#tblProductos" ).DataTable().destroy();
+		$( "#pedidoID_variante" ).val( "" );
+	} );
+}
+
+function ver_productos( pedidoID ) {
+	tablaProductos = $( '#tblProductos' ).dataTable( {
+		"aProcessing": true, //Se activa el procesamiento del datatable
+		"aServerSide": true, //Se pagina y filtra por medio del servidor
+		dom: "f<'row'<'col-sm-2'B><'col-sm-1'l><'col-sm-9'p>> rt <'bottom'ip<'clear'>>",//Se definen los elementos de control de la tabla
+		buttons: [
+			{extend: 'excelHtml5', title: 'Listado de Productos', exportOptions: {columns: [ 0, 1, 2, 3 ]}, className: 'btn btn-sm btn-primary'},
+			{extend: 'pdf', title: 'Listado de Productos', exportOptions: {columns: [ 0, 1, 2, 3 ]}, className: 'btn btn-sm btn-primary'},
+		],
+
+		"ajax": {
+			url: '../ajax/pedido.php?op=ver_productos&ped=' + pedidoID,
+			type: "get",
+			dataType: "json",
+			error: function ( e ) {
+				console.log( e.responseText );
+			}
+		},
+		"createdRow": function ( row, data, dataIndex ) {
+			if ( data[ 1 ] == '<span class="badge bg-danger">Desactivado</span>' ) {
+				$( row ).addClass( 'table-danger' );
+			}
+		},
+		"columnDefs": [
+			{"width": "140px", "targets": [ 3, 6 ]},
+			{"width": "80px", "targets": [ 0, 1, 4, 5 ]},
+			{"className": "text-center", "targets": [ 0, 1, 4, 5, 6 ]},
+			{"className": "text-end", "targets": [ 3 ]},
+		],
+		"Destroy": true,
+		"iDisplayLength": 25, //Número de registros para paginar
+		"order": [ [ 1, "desc" ] ] //Ordenar (columna, orden ascendente o descendente, etc)
+	} ).DataTable();
+}
+
+function  facturar( pedidoID ) {
+	$.post( "../ajax/pedido.php?op=obtener_datos_factura", {pedidoID: pedidoID}, function ( data, statusUsuario ) {
+		data = JSON.parse( data );
+		obtenerTipoCambio( 'MXN' ); //producción: obtenerTipoCambio( data.moneda );
+		$( "#pedido_id_factura" ).val( data.pedidoID );
+		$( "#facturaID" ).val( data.facturaID );
+		let moneda = data.moneda ? data.moneda : 'USD';
+		$( "#moneda" ).val( moneda );
+		$( "#moneda" ).selectpicker( 'refresh' );
+		$( "#clienteID_factura" ).val( data.clienteID );
+		$( "#clienteID_factura" ).selectpicker( 'refresh' );
+		$( "#telefono" ).val( data.telefono );
+		$( "#calle" ).val( data.calle );
+		$( "#num_ext" ).val( data.num_ext );
+		$( "#num_int" ).val( data.num_int );
+		$( "#colonia" ).val( data.colonia );
+		$( "#poblacion" ).val( data.poblacion );
+		$( "#edoPais" ).val( data.edoPais );
+		$( "#email_cliente" ).val( data.email_cliente );
+		let cp = data.cp ? data.cp : '00000';
+		$( "#cp" ).val( cp );
+		$( "#razonSocial" ).val( data.nombreCliente );
+		let rfcCliente = data.rfcCliente ? data.rfcCliente : 'XEXX010101000';
+		$( "#rfcCliente" ).val( rfcCliente );
+		let regimenFiscal = data.regimenFiscal ? data.regimenFiscal : '626';
+		$( "#regimenFiscal" ).val( regimenFiscal );
+		$( "#regimenFiscal" ).selectpicker( 'refresh' );
+		$( "#num_cuenta" ).val( data.num_cuenta );
+		$( "#banco" ).val( data.banco );
+		$( "#metodoPago" ).val( data.metodoPago );
+		$( "#metodoPago" ).selectpicker('refresh');
+		$( "#formadePago" ).val( data.formadePago );
+		$( "#formadePago" ).selectpicker( 'refresh' );
+		let usoCfdi = data.usoCfdi ? data.usoCfdi : 'S01';
+		$( "#usoCfdi" ).val( usoCfdi );
+		$( "#comentarios" ).val( data.comentarios );
+	});
+	$.post( "../ajax/pedido.php?op=mostrarDetallesFactura", {pedidoID: pedidoID}, function ( data, statusUsuario ) {
+		$("#detallesFactura").html(data);
+	});
+	$( "#modalFacturas" ).modal( "show" );
+}
+
+function  ver_factura( facturaID, pedidoID ) {
+	$.post( "../ajax/pedido.php?op=ver_factura", {facturaID: facturaID}, function ( data, statusUsuario ) {
+		data = JSON.parse( data );
+		$( "#pedido_id_factura" ).val( pedidoID );
+		$( "#facturaID" ).val( data.facturaID );
+		$( "#moneda" ).val( data.moneda );
+		$( "#moneda" ).selectpicker( 'refresh' );
+		$( "#tipoCambio" ).val( data.tipoCambio );
+		$( "#clienteID_factura" ).val( data.clienteID );
+		$( "#clienteID_factura" ).selectpicker( 'refresh' );
+		$( "#telefono" ).val( data.telefono );
+		$( "#calle" ).val( data.calle );
+		$( "#num_ext" ).val( data.num_ext );
+		$( "#num_int" ).val( data.num_int );
+		$( "#colonia" ).val( data.colonia );
+		$( "#poblacion" ).val( data.poblacion );
+		$( "#edoPais" ).val( data.edoPais );
+		$( "#email_cliente" ).val( data.email_cliente );
+		let cp = data.cp ? data.cp : '00000';
+		$( "#cp" ).val( cp );
+		$( "#razonSocial" ).val( data.nombreCliente );
+		let rfcCliente = data.rfcCliente ? data.rfcCliente : 'XEXX010101000';
+		$( "#rfcCliente" ).val( rfcCliente );
+		let regimenFiscal = data.regimenFiscal ? data.regimenFiscal : '626';
+		$( "#regimenFiscal" ).val( regimenFiscal );
+		$( "#regimenFiscal" ).selectpicker( 'refresh' );
+		$( "#num_cuenta" ).val( data.num_cuenta );
+		$( "#banco" ).val( data.banco );
+		$( "#metodoPago" ).val( data.metodoPago );
+		$( "#metodoPago" ).selectpicker('refresh');
+		$( "#formadePago" ).val( data.formadePago );
+		$( "#formadePago" ).selectpicker( 'refresh' );
+		let usoCfdi = data.usoCfdi ? data.usoCfdi : 'S01';
+		$( "#usoCfdi" ).val( usoCfdi );
+		$( "#comentarios" ).val( data.comentarios );
+	});
+	console.log( pedidoID );
+	$.post( "../ajax/pedido.php?op=mostrarDetallesFactura", {pedidoID: pedidoID}, function ( data, statusUsuario ) {
+		$("#detallesFactura").html(data);
+	});
+	$("#btnGuardarFactura").prop( "disabled", true );
+	$( "#modalFacturas" ).modal( "show" );
+}
+
+function modificarSubTotales(id) {
+	let totales = 0;
+	let uni = document.getElementById("precioVenta"+id).value;
+	let cantidad = document.getElementById("cantidad"+id).value;
+
+	totales = parseFloat(uni) * parseFloat(cantidad);
+	document.getElementById("subtotal"+id).value = totales.toFixed(2);
+	document.getElementById("subtotal_html"+id).innerHTML = totales.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');
+	modificarTotales();
+}
+
+function modificarTotales() {
+	let totales = 0;
+	let tot = document.getElementsByName("subtotal[]");
+	for (let i = 0; i < tot.length; i++) {
+		totales += parseFloat( tot[i].value );
+	}
+	console.log(totales);
+	$('#grantotal').html( totales.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'));
+}
+
+async function obtenerTipoCambio(moneda) {
+	if( moneda == 'MXN' ) {
+		$( "#tipoCambio" ).val( 1 );
+		return;
+	} else {
+		try {
+			const response = await fetch('../tipo_cambio.php');
+			const data = await response.json();
+			if ( !response.ok ) {
+				throw new Error( 'Error al obtener el tipo de cambio' );
+			} else {
+				let tipo_cambio = parseFloat(data.bmx.series[0].datos[0].dato);
+				$( "#tipoCambio" ).val( tipo_cambio.toFixed(2) );
+			}
+		} catch ( error ) {
+			console.error( error );
+		}
+	}
+}
+
+function timbra( facturaID ) {
+	bootbox.confirm( "¿Quieres Timbrar la Factura?<br/> <span style='color:red;font-weight:bold;'>¡Esta acción no se puede deshacer!</span>", function ( result ) {
+		if ( result ) {
+			var dialog = bootbox.dialog( {
+				message: '<h5><i class="fa fa-cog fa-spin fa-fw" font-size="2"></i> Por favor espera mientras se timbra la factura...</h5>',
+				closeButton: false
+			} );
+			$.post( "../ajax/factura.php?op=timbra", {facturaID: facturaID}, function ( data, status ) {
+				dialog.modal( 'hide' );
+				bootbox.alert( data );
+				tabla.clear().draw();
+				tabla.ajax.reload();
+			} ).fail( function () {
+				dialog.modal( 'hide' );
+				bootbox.alert( 'No se ha podido timbrar la factura' );
+			} ).done( function () {
+				dialog.modal( 'hide' );
+			} );
+			dialog.modal( 'hide' );
+		}
+	} );
+}
+
+init();
