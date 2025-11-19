@@ -46,17 +46,35 @@ $descuento=isset($_POST["descuento"])? limpiarCadena($_POST["descuento"]):"0";
 $moneda=isset($_POST["moneda"])? limpiarCadena($_POST["moneda"]):"";
 $tipoCambio=isset($_POST["tipoCambio"])? limpiarCadena($_POST["tipoCambio"]):"1";
 $cliente_id=isset($_POST["cliente_id"])? limpiarCadena($_POST["cliente_id"]):"0";
+$clienteID=isset($_POST["clienteID"])? limpiarCadena($_POST["clienteID"]):"0";
 $comentarios=isset($_POST["comentarios"])? limpiarCadena($_POST["comentarios"]):"";
 $pedido_id=isset($_POST["pedido_id"])? limpiarCadena($_POST["pedido_id"]):"";
+$tipo=isset($_POST["tipo"])? limpiarCadena($_POST["tipo"]):"";
 
 //Detalles de la factura
 $producto_id		= (isset($_POST["producto_id"]))? $_POST["producto_id"]: array();
+$variante_id		= (isset($_POST["variante_id"]))? $_POST["variante_id"]: array();
 $descripcion		= (isset($_POST["descripcion"]))? $_POST["descripcion"]: array();
 $cantidad			= (isset($_POST["cantidad"]))? $_POST["cantidad"]: array();
 $precioVenta		= (isset($_POST["precioVenta"]))? $_POST["precioVenta"]: array();
 $subtotal			= (isset($_POST["subtotal"]))? $_POST["subtotal"]: array();
 
+//Pedidos generados por el usuario
+$factura_id=isset($_POST["factura_id"])? limpiarCadena($_POST["factura_id"]):"0";
+$status=isset($_POST["status"])? limpiarCadena($_POST["status"]):"";
+$nombreCliente=isset($_POST["nombreCliente"])? limpiarCadena($_POST["nombreCliente"]):"";
+
 switch ($_GET["op"]){
+	case 'guardaryeditar':
+			if(empty($pedidoID)){
+				$rspta=$pedidos->insertar($clienteID,$nombreCliente,$observaciones,$producto_id,$variante_id,$descripcion,$cantidad,$precioVenta);
+				echo $rspta ? "Pedido registrado" : "Pedido no se pudo registrar";
+			} else{
+				$rspta=$pedidos->editar($pedidoID,$clienteID,$nombreCliente,$observaciones,$producto_id,$variante_id,$descripcion,$cantidad,$precioVenta);
+				echo $rspta ? "Pedido actualizado" : "El Pedido no se pudo actualizar";
+			}
+	break;
+
 	case 'guardaryeditar_factura':
 			if(empty($facturaID)){
 				$rspta=$pedidos->insertar_factura($serie,$metodoPago,$claveTipoComprobante,$usoCfdi,$formadePago,$descuento,$moneda,$tipoCambio,$cliente_id,$razonSocial,$rfcCliente,$usuarioID,$comentarios,$pedido_id,$user_login,$user_nicename,$email_cliente,$contrasenna,$telefono,$calle,$num_ext,$num_int,$colonia,$poblacion,$edoPais,$cp,$regimenFiscal,$num_cuenta,$banco,$producto_id,$descripcion,$cantidad,$precioVenta,$subtotal);
@@ -72,8 +90,17 @@ switch ($_GET["op"]){
 		echo json_encode($rspta);
 	break;
 
+	case 'mostrar_pedido':
+		$rspta=$pedidos->mostrar_pedido($pedidoID);
+		echo json_encode($rspta);
+	break;
+
 	case 'mostrarDetallesFactura':
-		$rspta=$pedidos->mostrarDetalles($pedidoID);
+		if($tipo=='1'){
+			$rspta=$pedidos->mostrarDetalles($pedidoID);
+		} else {
+			$rspta=$pedidos->mostrarDetalles_pedido($pedidoID);
+		}
 		echo '<thead class="bg-info text-light">
 			<th>Cantidad</th>
 			<th>Producto</th>
@@ -99,9 +126,9 @@ switch ($_GET["op"]){
 					<input type="hidden" name="producto_id[]" value="'.$reg->producto_id.'">'.$reg->nombre_producto.' <br><small><strong>SKU:</strong> '.$reg->sku.'</small>
 				</td>
 
-				//Variante
+				//Descripcion
 				<td>
-					<input type="hidden" name="descripcion[]" value="'.$reg->variante.'">'.$reg->variante.'
+					<textarea class="form-control" name="descripcion[]" id="descripcion'.$reg->producto_id.'" placeholder="Descripción" rows="3">'.$reg->descripcion.'</textarea>
 				</td>
 
 				//Imagen
@@ -111,16 +138,18 @@ switch ($_GET["op"]){
 
 				//Unitario
 				<td style="width:140px;!important;text-align:right;">
-					<input type="hidden" name="precioVenta[]" id="unitario'.$reg->producto_id.'" value="'.$reg->precio_venta.'" required>$'.number_format($reg->precio_venta, 2, '.', ',').'
+					<input type="hidden" name="variante_id[]" value="'.$reg->variante_id.'">
+					<input type="hidden" name="precioVenta[]" id="unitario'.$reg->producto_id.'" value="'.$reg->precioVenta.'" required>$'.number_format($reg->precioVenta, 2, '.', ',').'
 				</td>
 
 				//Subtotal
 				<td style="width:140px;!important;text-align:right;">
-					$<span id="subtotal_html'.$reg->producto_id.'">'.number_format($reg->precio_venta, 2, '.', ',').'</span>
-					<input type="hidden" class="form-control" name="subtotal[]" id="subtotal'.$reg->producto_id.'" value="'.number_format($reg->precio_venta, 2, '.', '').'">
+					$<span id="subtotal_html'.$reg->producto_id.'">'.number_format($reg->precioVenta, 2, '.', ',').'</span>
+					<input type="hidden" class="form-control" name="subtotal[]" id="subtotal'.$reg->producto_id.'" value="'.number_format($reg->precioVenta, 2, '.', '').'">
 				</td>
-				'.$totales=$totales+number_format($reg->precio_venta, 2, '.', '').'
-			</tr>';
+				</tr>';
+				$precioVenta=floatval(str_replace(',','',$reg->precioVenta));
+				$totales=$totales+$precioVenta;
 		}
 		echo '<tfoot>
 			<th  colspan="4"></th>
@@ -130,12 +159,16 @@ switch ($_GET["op"]){
 	break;
 
 	case 'obtener_datos_factura':
-		$rspta=$pedidos->obtener_datos_factura($pedidoID);
+		if($tipo=='1'){
+			$rspta=$pedidos->obtener_datos_factura($pedidoID);
+		} else {
+			$rspta=$pedidos->mostrar_pedido($pedidoID);
+		}
 		echo json_encode($rspta);
 	break;
 
 	case 'ver_factura':
-		$rspta=$pedidos->ver_factura($facturaID);
+		$rspta=$pedidos->obtener_datos_factura($pedidoID);
 		echo json_encode($rspta);
 	break;
 
@@ -145,7 +178,7 @@ switch ($_GET["op"]){
 			<th></th>
 			<th>Cantidad</th>
 			<th>Producto</th>
-			<th>Variante</th>
+			<th>Descripción</th>
 			<th>IMG</th>
 			<th>$Unitario</th>
 			<th>$Subtotal</th>
@@ -155,6 +188,7 @@ switch ($_GET["op"]){
 
 			echo '<tr class="filas" id="fila'.$reg->producto_id.'">
 				<td>
+					<input type="hidden" class="form-control" name="contador[]" id="contador'.$reg->producto_id.'" value="'.$reg->producto_id.'">
 					<button type="button" class="btn btn-danger btn-sm" onclick="eliminarDetalle('.$reg->producto_id.')"><i class="fas fa-times"></i></button>
 				</td>
 
@@ -166,12 +200,13 @@ switch ($_GET["op"]){
 				//Producto
 				<td>
 					<input type="hidden" class="form-control" name="contador[]" id="contador'.$reg->producto_id.'" value="'.$reg->producto_id.'">
+					<input type="hidden" name="variante_id[]" value="'.$reg->variante_id.'">
 					<input type="hidden" name="producto_id[]" value="'.$reg->producto_id.'">'.$reg->nombre_producto.' <br><small><strong>SKU:</strong> '.$reg->sku.'</small>
 				</td>
 
-				//Variante
+				//Descripción
 				<td>
-					<input type="hidden" name="variante_id[]" value="'.$reg->variante_id.'">'.$reg->variante.'
+					<textarea class="form-control" name="descripcion[]" id="descripcion'.$reg->producto_id.'" placeholder="Descripción" rows="3">'.$reg->descripcion.'</textarea>
 				</td>
 
 				//Imagen
@@ -181,13 +216,79 @@ switch ($_GET["op"]){
 
 				//Unitario
 				<td style="width:140px;!important;text-align:right;">
-					<input type="number" min=".01" step=".01" style="text-align:right;" class="form-control" class="form-control" name="precioVenta[]" id="precioVenta'.$reg->producto_id.'" placeholder="Precio Unitario" value="'.$reg->precio_venta.'" oninput="modificarSubTotales('.$reg->producto_id.')" required>
+					<input type="number" min=".01" step=".01" style="text-align:right;" class="form-control" class="form-control" name="precioVenta[]" id="precioVenta'.$reg->producto_id.'" placeholder="Precio Unitario" value="'.$reg->precioVenta.'" oninput="modificarSubTotales('.$reg->producto_id.')" required>
 				</td>
 
 				//Subtotal
 				<td style="width:140px;!important;text-align:right;">
-					$<span id="subtotal_html'.$reg->producto_id.'">'.number_format($reg->precio_venta, 2, '.', ',').'</span>
-					<input type="hidden" class="form-control" name="subtotal[]" id="subtotal'.$reg->producto_id.'" value="'.number_format($reg->precio_venta, 2, '.', '').'">
+					$<span id="subtotal_html'.$reg->producto_id.'">'.number_format($reg->precioVenta, 2, '.', ',').'</span>
+					<input type="hidden" class="form-control" name="subtotal[]" id="subtotal'.$reg->producto_id.'" value="'.number_format($reg->precioVenta, 2, '.', '').'">
+				</td>
+				<script>
+					setTimeout(function(){
+						modificarTotales();
+					},500);
+				</script>
+			</tr>';
+		}
+		echo '<tfoot>
+			<th  colspan="5"></th>
+			<th style="width:140px;text-align:right;">Total:</th>
+			<th style="width:180px;text-align:right;">$<strong id="grantotal">0.00</strong></th>
+		</tfoot>';
+	break;
+
+	case 'mostrarDetalles_pedido':
+		$rspta=$pedidos->mostrarDetalles_pedido($pedidoID);
+		echo '<thead class="bg-info text-light">
+			<th></th>
+			<th>Cantidad</th>
+			<th>Producto</th>
+			<th>Descripción</th>
+			<th>IMG</th>
+			<th>$Unitario</th>
+			<th>$Subtotal</th>
+		</thead>';
+		while ($reg = $rspta->fetch_object()){
+			$imagen = ($reg->imagen)?'<a href="'.$reg->imagen.'" data-featherlight="image"><img class="img-thumbnail" style="width:40px;height:auto;" src="'.$reg->imagen.'"></a>' : '<img class="img-thumbnail" style="width:40px;height:auto;" src="../public/images/placeholder.jpg">';
+
+			echo '<tr class="filas" id="fila'.$reg->producto_id.'">
+				<td>
+					<input type="hidden" class="form-control" name="contador[]" id="contador'.$reg->producto_id.'" value="'.$reg->producto_id.'">
+					<button type="button" class="btn btn-danger btn-sm" onclick="eliminarDetalle('.$reg->producto_id.')"><i class="fas fa-times"></i></button>
+				</td>
+
+				//Cantidad
+				<td style="width:140px;!important">
+					<input type="number" min="1" step="1" style="text-align:right;" class="form-control" class="form-control" name="cantidad[]" id="cantidad'.$reg->producto_id.'" placeholder="Número de Cantidad" value="'.$reg->cantidad.'" oninput="modificarSubTotales('.$reg->producto_id.')" required>
+				</td>
+
+				//Producto
+				<td>
+					<input type="hidden" class="form-control" name="contador[]" id="contador'.$reg->producto_id.'" value="'.$reg->producto_id.'">
+					<input type="hidden" name="variante_id[]" value="'.$reg->variante_id.'">
+					<input type="hidden" name="producto_id[]" value="'.$reg->producto_id.'">'.$reg->nombre_producto.' <br><small><strong>SKU:</strong> '.$reg->sku.'</small>
+				</td>
+
+				//Descripción
+				<td>
+					<textarea class="form-control" name="descripcion[]" id="descripcion'.$reg->producto_id.'" placeholder="Descripción" rows="3">'.$reg->descripcion.'</textarea>
+				</td>
+
+				//Imagen
+				<td style="width:140px;!important;text-align:center;">
+					'.$imagen.'
+				</td>
+
+				//Unitario
+				<td style="width:140px;!important;text-align:right;">
+					<input type="number" min=".01" step=".01" style="text-align:right;" class="form-control" class="form-control" name="precioVenta[]" id="precioVenta'.$reg->producto_id.'" placeholder="Precio Unitario" value="'.$reg->precioVenta.'" oninput="modificarSubTotales('.$reg->producto_id.')" required>
+				</td>
+
+				//Subtotal
+				<td style="width:140px;!important;text-align:right;">
+					$<span id="subtotal_html'.$reg->producto_id.'">'.number_format($reg->precioVenta, 2, '.', ',').'</span>
+					<input type="hidden" class="form-control" name="subtotal[]" id="subtotal'.$reg->producto_id.'" value="'.number_format($reg->precioVenta, 2, '.', '').'">
 				</td>
 				<script>
 					setTimeout(function(){
@@ -209,9 +310,10 @@ switch ($_GET["op"]){
 		$data= Array();
 
 		while ($reg=$rspta->fetch_object()){
-			$botonMostrar = '<button class="btn btn-dark btn-sm" title="Mostrar Pedido" href="#" onclick="mostrar('.$reg->pedidoID.')"><i class="fas fa-fw fa-pencil-alt"></i></button>';
-			$botonFacturar = (isset($reg->facturaID) && empty($reg->folioFiscal))? ' <button class="btn btn-info btn-sm" title="Facturar Pedido" href="#" onclick="timbra('.$reg->facturaID.')"><i class="fas fa-fw fa-cog"></i></button>' : ((isset($reg->facturaID) && isset($reg->folioFiscal))? ' <button class="btn btn-success btn-sm" title="Facturar Pedido" href="#" onclick="ver_factura('.$reg->facturaID.','.$reg->pedidoID.')"><i class="fas fa-fw fa-eye"></i></button>' : ' <button class="btn btn-primary btn-sm" title="Facturar Pedido" href="#" onclick="facturar('.$reg->pedidoID.')"><i class="fas fa-fw fa-file-invoice-dollar"></i></button>');
-			$botonProducto = '<button class="btn btn-info btn-sm" title="Ver Productos del Pedido" href="#" onclick="modalProductos('.$reg->pedidoID.')"><i class="fas fa-fw fa-eye espaciado-icn"></i> Productos</button>';
+			$botonMostrar = ($reg->tipo_pedido=='worpress')? '<button type="button" class="btn btn-dark btn-sm" title="Mostrar Pedido" href="#" onclick="mostrar('.$reg->pedidoID.')"><i class="fas fa-fw fa-pencil-alt"></i></button>' : '<button type="button" class="btn btn-dark btn-sm" title="Mostrar Pedido" href="#" onclick="mostrar_pedido('.$reg->pedidoID.')"><i class="fas fa-fw fa-pencil-alt"></i></button>';
+			$pedidoWordpress = ($reg->tipo_pedido=='worpress')? '1' : '0';
+			$botonFacturar = (isset($reg->facturaID) && empty($reg->folioFiscal))? ' <button type="button" class="btn btn-success btn-sm" title="Editar Factura" href="#" onclick="edita_factura('.$reg->facturaID.','.$reg->pedidoID.')"><i class="fas fa-fw fa-pencil-alt"></i></button>' : ((isset($reg->facturaID) && isset($reg->folioFiscal))? ' <button type="button" class="btn btn-success btn-sm" title="Ver Factura" href="#" onclick="ver_factura('.$reg->facturaID.','.$reg->pedidoID.')"><i class="fas fa-fw fa-eye"></i></button>' : ' <button type="button" class="btn btn-primary btn-sm" title="Facturar Pedido" href="#" onclick="facturar('.$reg->pedidoID.','.$pedidoWordpress.')"><i class="fas fa-fw fa-file-invoice-dollar"></i></button>');
+			$botonTimbrar = (isset($reg->facturaID) && empty($reg->folioFiscal))? ' <button type="button" class="btn btn-info btn-sm" title="Facturar Pedido" href="#" onclick="timbra('.$reg->facturaID.')"><i class="fas fa-fw fa-cog"></i></button>' : ' <button type="button" class="btn btn-muted btn-sm disabled" title="Timbrar Factura" href="#"><i class="fas fa-fw fa-cog"></i></button>';
 			$linkMostrar = '<a class="link-underline-primary" title="Mostrar Pedido" onclick="mostrar('.$reg->pedidoID.')">'.$reg->pedidoID.'</a>';
 			$statusLabel = ($reg->estado=='wc-pending') ? '<span class="badge rounded-pill text-bg-secondary">Pendiente</span>' :  ( ($reg->estado=='wc-processing') ? '<span class="badge rounded-pill text-bg-info">En Proceso</span>' : ( ($reg->estado=='wc-completed') ? '<span class="badge rounded-pill text-bg-success">Completado</span>' : ( ($reg->estado=='wc-cancelled') ? '<span class="badge rounded-pill text-bg-danger">Cancelado</span>' : '<span class="badge rounded-pill text-bg-secondary">'.htmlspecialchars($reg->estado).'</span>')));
 			$pdf = (isset($reg->folioFiscal))? '<a href="../files/facturas/'.$reg->nombrePDF.'.pdf" target="_blank"><i class="fas fa-file-pdf text-danger" title="Descargar PDF"></i></a>' : '<i class="fas fa-file-pdf text-muted" title="Descargar PDF"></i>';
@@ -223,7 +325,7 @@ switch ($_GET["op"]){
 				"3"=>'$'.number_format($reg->total, 2, '.', ','),
 				"4"=>$pdf.' '.$xml,
 				"5"=>$statusLabel,
-				"6"=>$botonMostrar.$botonFacturar
+				"6"=>$botonMostrar.$botonFacturar.$botonTimbrar
 			);
 		}
 		$results = array(
@@ -235,19 +337,18 @@ switch ($_GET["op"]){
 	break;
 
 	case 'ver_productos':
-		$rspta=$pedidos->ver_productos($pedidoID);
+		$rspta=$pedidos->ver_productos();
 		//Vamos a declarar un array
 		$data= Array();
 
 		while ($reg=$rspta->fetch_object()){
 			$imagen = ($reg->imagen)?'<a href="'.$reg->imagen.'" data-featherlight="image"><img class="img-thumbnail" style="width:40px;height:auto;" src="'.$reg->imagen.'"></a>' : '<img class="img-thumbnail" style="width:40px;height:auto;" src="../public/images/placeholder.jpg">';
 			$data[]=array(
-				"0"=>$reg->cantidad,
-				"1"=>$reg->nombreProducto.'<br><small><strong>SKU:</strong> '.$reg->sku.'</small>',
-				"2"=>$reg->nombreVariante,
-				"3"=>$imagen,
-				"4"=>$reg->nombreUnidad.' <small>('.$reg->unidad.')</small>',
-				"5"=>'$'.number_format($reg->precioVenta, 2, '.', ','),
+				"0"=>$reg->nombreProducto.'<br><small><strong>SKU:</strong> '.$reg->sku.'</small>',
+				"1"=>$reg->variante,
+				"2"=>$imagen,
+				"3"=>'$'.number_format($reg->precioVenta, 2, '.', ','),
+				"4"=>'<button type="button" class="btn btn-warning btn-sm" onclick="agregarDetalle('.$reg->productoID.','.$reg->variante_id.',\''.$reg->nombreProducto.'\',\''.$reg->variante.'\',\''.$reg->imagen.'\','.$reg->precioVenta.')"><i class="fas fa-plus"></i></button>',
 			);
 		}
 		$results = array(

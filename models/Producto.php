@@ -58,7 +58,7 @@ Class Producto {
 			LEFT JOIN unidadesmedida med ON fac.medida_id = med.id
 			LEFT JOIN clavesfactura cla ON fac.clave_id = cla.id
 			LEFT JOIN wp_posts var ON p.ID = var.post_parent AND var.post_type = 'product_variation'
-			WHERE p.post_type = 'product' AND p.post_status = 'publish' GROUP BY p.ID;";
+			WHERE p.post_type = 'product' AND p.post_status = 'publish' GROUP BY p.ID";
 		return ejecutarConsulta($sql);		
 	}
 

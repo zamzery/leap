@@ -8,10 +8,10 @@ Class Cliente {
 	}
 
 	//Implementamos un método para insertar registros
-	public function insertar($display_name,$user_login,$user_nicename,$user_email,$contrasenna,$telefono,$calle,$num_ext,$num_int,$colonia,$poblacion,$edoPais,$cp,$razonSocial,$rfcCliente,$regimenFiscal,$num_cuenta,$banco,$metodoPago,$formadePago,$usoCfdi,$comentarios,$constancia,$moneda,$usuarioID){
+	public function insertar($display_name,$telefono,$calle,$num_ext,$num_int,$colonia,$poblacion,$edoPais,$cp,$razonSocial,$rfcCliente,$regimenFiscal,$num_cuenta,$banco,$metodoPago,$formadePago,$usoCfdi,$comentarios,$constancia,$moneda,$usuarioID){
 		$sw=true;
-		$sql="INSERT INTO wp_users (display_name,user_login,user_nicename,user_email,user_pass,user_registered)
-		VALUES ('$display_name','$user_login','$user_nicename','$user_email','$contrasenna',NOW())";
+		$sql="INSERT INTO wp_users (display_name,user_registered)
+		VALUES ('$display_name',NOW())";
 		$clienteIDnew = ejecutarConsulta_retornarID($sql) or $sw = false;
 
 		if($sw==true){
@@ -26,9 +26,9 @@ Class Cliente {
 	}
 
 	//Implementamos un método para editar registros
-	public function editar($clienteID,$display_name,$user_login,$user_nicename,$user_email,$contrasenna,$telefono,$calle,$num_ext,$num_int,$colonia,$poblacion,$edoPais,$cp,$razonSocial,$rfcCliente,$regimenFiscal,$num_cuenta,$banco,$metodoPago,$formadePago,$usoCfdi,$comentarios,$constancia,$moneda,$usuarioID){
+	public function editar($clienteID,$display_name,$telefono,$calle,$num_ext,$num_int,$colonia,$poblacion,$edoPais,$cp,$razonSocial,$rfcCliente,$regimenFiscal,$num_cuenta,$banco,$metodoPago,$formadePago,$usoCfdi,$comentarios,$constancia,$moneda,$usuarioID){
 		$sw=true;
-		$sql="UPDATE wp_users SET display_name='$display_name',user_login='$user_login',user_nicename='$user_nicename',user_email='$user_email',user_pass='$contrasenna' WHERE ID='$clienteID'";
+		$sql="UPDATE wp_users SET display_name='$display_name' WHERE ID='$clienteID'";
 		ejecutarConsulta($sql) or $sw = false;
 
 		if($sw==true){
@@ -46,9 +46,9 @@ Class Cliente {
 		return $sw;
 	}
 
-	public function editar_sinpass($clienteID,$display_name,$user_login,$user_nicename,$user_email,$telefono,$calle,$num_ext,$num_int,$colonia,$poblacion,$edoPais,$cp,$razonSocial,$rfcCliente,$regimenFiscal,$num_cuenta,$banco,$metodoPago,$formadePago,$usoCfdi,$comentarios,$constancia,$moneda,$usuarioID){
+	public function editar_sinpass($clienteID,$display_name,$telefono,$calle,$num_ext,$num_int,$colonia,$poblacion,$edoPais,$cp,$razonSocial,$rfcCliente,$regimenFiscal,$num_cuenta,$banco,$metodoPago,$formadePago,$usoCfdi,$comentarios,$constancia,$moneda,$usuarioID){
 		$sw=true;
-		$sql="UPDATE wp_users SET display_name='$display_name',user_login='$user_login',user_nicename='$user_nicename',user_email='$user_email' WHERE ID='$clienteID'";
+		$sql="UPDATE wp_users SET display_name='$display_name' WHERE ID='$clienteID'";
 		ejecutarConsulta($sql) or $sw = false;
 
 		if($sw==true){
@@ -64,11 +64,6 @@ Class Cliente {
 			}
 		}
 		return $sw;
-	}
-
-	public function guardarContacto($clienteContactoID,$principal,$contacto,$cargo,$telefono,$email,$observaciones,$direccion){
-		$sql="UPDATE clienteContacto SET principal='$principal',contacto='$contacto',cargo='$cargo',telefono='$telefono',email='$email',observaciones='$observaciones',direccion='$direccion' WHERE id='$clienteContactoID'";
-		return ejecutarConsulta($sql);
 	}
 
 	//Implementamos un método para desactivar clientes

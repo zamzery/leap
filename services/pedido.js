@@ -5,6 +5,7 @@ var tablaProductos;
 function init() {
 	mostrarform( false );
 	listar();
+	ver_productos();
 
 	$( "#formulario" ).on( "submit", function ( e ) {
 		guardaryeditar( e );
@@ -22,6 +23,11 @@ function init() {
 		$( '#clienteID_factura' ).selectpicker( 'refresh' );
 	} );
 
+	$( "#clienteID" ).change( function () {
+		var nombreCliente = $( '#clienteID option:selected' ).data( 'nombre' );
+		$( "#nombreCliente" ).val( nombreCliente );
+	} );
+
 	$(document).ready(function(){
 			$( "#modalFacturas" ).on( "hidden.bs.modal", function () {
 			$( "#pedido_id_factura" ).val( "");
@@ -37,7 +43,7 @@ function init() {
 			$( "#colonia" ).val( "" );
 			$( "#poblacion" ).val( "" );
 			$( "#edoPais" ).val( "" );
-			$( "#cp" ).val( "00000" );
+				$( "#cp" ).val( "44460" );
 			$( "#razonSocial" ).val( "" );
 			$( "#rfcCliente" ).val( "" );
 			$( "#regimenFiscal" ).val( "626" );
@@ -54,23 +60,21 @@ function init() {
 			$( "#btnGuardarFactura" ).prop( "disabled", false );
 		} );
 	} );
+
+	setTimeout( function () {
+		$( "#clienteID" ).val( "0" );
+		$( "#clienteID" ).selectpicker( 'refresh' );
+	}, 500 );
 }
 
 //Función limpiar
 function limpiar() {
 	$( "#pedidoID" ).val( "" );
-	$( "#nombre" ).val( "" );
-	$( "#precioVenta" ).val( "" );
-	$( "#medida_id" ).val( "" );
-	$( "#medida_id" ).selectpicker( 'refresh' );
-	$( "#clave_id" ).val( "" );
-	$( "#clave_id" ).selectpicker( 'refresh' );
+	$( "#nombreCliente" ).val( "" );
+	$( "#clienteID" ).val( "0" );
+	$( "#clienteID" ).selectpicker( 'refresh' );
+	$( "#fecha" ).val( "" );
 	$( "#observaciones" ).val( "" );
-	$( "#sku" ).val( "" );
-	$( "#imagenActual" ).val( "" );
-	$( "#imagen" ).val( "" );
-	$( "#imagenMuestra" ).hide();
-	$( "#imagenMuestra" ).html( "" ).attr( "" );
 }
 
 //Función mostrar formulario
@@ -180,7 +184,8 @@ function mostrar( pedidoID ) {
 		data = JSON.parse( data );
 		mostrarform( true );
 		$( "#pedidoID" ).val( data.pedidoID );
-		$( "#fecha" ).val( data.fecha );
+		let fecha = new Date( data.fecha ).toISOString().split( 'T' )[ 0 ];
+		$( "#fecha" ).val( fecha );
 		$( "#clienteID" ).val( data.clienteID );
 		$( "#clienteID" ).selectpicker( 'refresh' );
 		$( "#nombreCliente" ).val( data.nombreCliente );
@@ -192,53 +197,57 @@ function mostrar( pedidoID ) {
 	});
 }
 
-function modalProductos( pedidoID ) {
-	$( "#pedidoID_variante" ).val( pedidoID );
-	$( "#modalProductos" ).modal( "show" );
-	ver_productos( pedidoID );
-	$( "#modalProductos" ).on( "hidden.bs.modal", function () {
-		$( "#tblProductos" ).DataTable().destroy();
-		$( "#pedidoID_variante" ).val( "" );
+
+function mostrar_pedido( pedidoID ) {
+	$.post( "../ajax/pedido.php?op=mostrar_pedido", {pedidoID: pedidoID}, function ( data, statusUsuario ) {
+		data = JSON.parse( data );
+		mostrarform( true );
+		$( "#pedidoID" ).val( data.pedidoID );
+		let fecha = new Date( data.fecha ).toISOString().split( 'T' )[ 0 ];
+		$( "#fecha" ).val( fecha );
+		$( "#clienteID" ).val( data.clienteID );
+		$( "#clienteID" ).selectpicker( 'refresh' );
+		$( "#nombreCliente" ).val( data.nombreCliente );
+		$( "#observaciones" ).val( data.observaciones );
+	} );
+
+	$.post( "../ajax/pedido.php?op=mostrarDetalles_pedido", {pedidoID: pedidoID}, function ( data, statusUsuario ) {
+		$( "#detalles" ).html( data );
 	} );
 }
 
-function ver_productos( pedidoID ) {
+function verModalProductos() {
+	$( "#modalProductos" ).modal( "show" );
+}
+
+function ver_productos() {
 	tablaProductos = $( '#tblProductos' ).dataTable( {
 		"aProcessing": true, //Se activa el procesamiento del datatable
 		"aServerSide": true, //Se pagina y filtra por medio del servidor
-		dom: "f<'row'<'col-sm-2'B><'col-sm-1'l><'col-sm-9'p>> rt <'bottom'ip<'clear'>>",//Se definen los elementos de control de la tabla
-		buttons: [
-			{extend: 'excelHtml5', title: 'Listado de Productos', exportOptions: {columns: [ 0, 1, 2, 3 ]}, className: 'btn btn-sm btn-primary'},
-			{extend: 'pdf', title: 'Listado de Productos', exportOptions: {columns: [ 0, 1, 2, 3 ]}, className: 'btn btn-sm btn-primary'},
-		],
-
+		dom: "f<'row'<'col-sm-2'><'col-sm-1'l><'col-sm-9'p>> rt <'bottom'ip<'clear'>>",//Se definen los elementos de control de la tabla
 		"ajax": {
-			url: '../ajax/pedido.php?op=ver_productos&ped=' + pedidoID,
+			url: '../ajax/pedido.php?op=ver_productos',
 			type: "get",
 			dataType: "json",
 			error: function ( e ) {
 				console.log( e.responseText );
 			}
 		},
-		"createdRow": function ( row, data, dataIndex ) {
-			if ( data[ 1 ] == '<span class="badge bg-danger">Desactivado</span>' ) {
-				$( row ).addClass( 'table-danger' );
-			}
-		},
 		"columnDefs": [
-			{"width": "140px", "targets": [ 3, 6 ]},
-			{"width": "80px", "targets": [ 0, 1, 4, 5 ]},
-			{"className": "text-center", "targets": [ 0, 1, 4, 5, 6 ]},
+			{"width": "140px", "targets": [ 3 ]},
+			{"width": "80px", "targets": [ 2, 4 ]},
+			{"className": "text-center", "targets": [ 2, 4 ]},
 			{"className": "text-end", "targets": [ 3 ]},
 		],
 		"Destroy": true,
 		"iDisplayLength": 25, //Número de registros para paginar
 		"order": [ [ 1, "desc" ] ] //Ordenar (columna, orden ascendente o descendente, etc)
 	} ).DataTable();
+	$( '#tblProductos' ).css( 'width', '100%' );
 }
 
-function  facturar( pedidoID ) {
-	$.post( "../ajax/pedido.php?op=obtener_datos_factura", {pedidoID: pedidoID}, function ( data, statusUsuario ) {
+function facturar( pedidoID, tipo ) {
+	$.post( "../ajax/pedido.php?op=obtener_datos_factura", {pedidoID: pedidoID, tipo: tipo}, function ( data, statusUsuario ) {
 		data = JSON.parse( data );
 		obtenerTipoCambio( 'MXN' ); //producción: obtenerTipoCambio( data.moneda );
 		$( "#pedido_id_factura" ).val( data.pedidoID );
@@ -256,7 +265,7 @@ function  facturar( pedidoID ) {
 		$( "#poblacion" ).val( data.poblacion );
 		$( "#edoPais" ).val( data.edoPais );
 		$( "#email_cliente" ).val( data.email_cliente );
-		let cp = data.cp ? data.cp : '00000';
+		let cp = data.cp ? data.cp : '44460';
 		$( "#cp" ).val( cp );
 		$( "#razonSocial" ).val( data.nombreCliente );
 		let rfcCliente = data.rfcCliente ? data.rfcCliente : 'XEXX010101000';
@@ -274,14 +283,14 @@ function  facturar( pedidoID ) {
 		$( "#usoCfdi" ).val( usoCfdi );
 		$( "#comentarios" ).val( data.comentarios );
 	});
-	$.post( "../ajax/pedido.php?op=mostrarDetallesFactura", {pedidoID: pedidoID}, function ( data, statusUsuario ) {
+	$.post( "../ajax/pedido.php?op=mostrarDetallesFactura", {pedidoID: pedidoID, tipo: tipo}, function ( data, statusUsuario ) {
 		$("#detallesFactura").html(data);
 	});
 	$( "#modalFacturas" ).modal( "show" );
 }
 
-function  ver_factura( facturaID, pedidoID ) {
-	$.post( "../ajax/pedido.php?op=ver_factura", {facturaID: facturaID}, function ( data, statusUsuario ) {
+function ver_factura( facturaID, pedidoID ) {
+	$.post( "../ajax/pedido.php?op=ver_factura", {facturaID: facturaID, pedidoID: pedidoID}, function ( data, statusUsuario ) {
 		data = JSON.parse( data );
 		$( "#pedido_id_factura" ).val( pedidoID );
 		$( "#facturaID" ).val( data.facturaID );
@@ -298,7 +307,7 @@ function  ver_factura( facturaID, pedidoID ) {
 		$( "#poblacion" ).val( data.poblacion );
 		$( "#edoPais" ).val( data.edoPais );
 		$( "#email_cliente" ).val( data.email_cliente );
-		let cp = data.cp ? data.cp : '00000';
+		let cp = data.cp ? data.cp : '44460';
 		$( "#cp" ).val( cp );
 		$( "#razonSocial" ).val( data.nombreCliente );
 		let rfcCliente = data.rfcCliente ? data.rfcCliente : 'XEXX010101000';
@@ -315,12 +324,54 @@ function  ver_factura( facturaID, pedidoID ) {
 		let usoCfdi = data.usoCfdi ? data.usoCfdi : 'S01';
 		$( "#usoCfdi" ).val( usoCfdi );
 		$( "#comentarios" ).val( data.comentarios );
-	});
-	console.log( pedidoID );
+	} );
 	$.post( "../ajax/pedido.php?op=mostrarDetallesFactura", {pedidoID: pedidoID}, function ( data, statusUsuario ) {
 		$("#detallesFactura").html(data);
 	});
 	$("#btnGuardarFactura").prop( "disabled", true );
+	$( "#modalFacturas" ).modal( "show" );
+}
+
+function edita_factura( facturaID, pedidoID ) {
+	$.post( "../ajax/pedido.php?op=obtener_datos_factura", {facturaID: facturaID, pedidoID: pedidoID}, function ( data, statusUsuario ) {
+		data = JSON.parse( data );
+		$( "#pedido_id_factura" ).val( pedidoID );
+		$( "#facturaID" ).val( data.facturaID );
+		$( "#moneda" ).val( data.moneda );
+		$( "#moneda" ).selectpicker( 'refresh' );
+		$( "#tipoCambio" ).val( data.tipoCambio );
+		$( "#clienteID_factura" ).val( data.clienteID );
+		$( "#clienteID_factura" ).selectpicker( 'refresh' );
+		$( "#telefono" ).val( data.telefono );
+		$( "#calle" ).val( data.calle );
+		$( "#num_ext" ).val( data.num_ext );
+		$( "#num_int" ).val( data.num_int );
+		$( "#colonia" ).val( data.colonia );
+		$( "#poblacion" ).val( data.poblacion );
+		$( "#edoPais" ).val( data.edoPais );
+		$( "#email_cliente" ).val( data.email_cliente );
+		let cp = data.cp ? data.cp : '44460';
+		$( "#cp" ).val( cp );
+		$( "#razonSocial" ).val( data.nombreCliente );
+		let rfcCliente = data.rfcCliente ? data.rfcCliente : 'XEXX010101000';
+		$( "#rfcCliente" ).val( rfcCliente );
+		let regimenFiscal = data.regimenFiscal ? data.regimenFiscal : '626';
+		$( "#regimenFiscal" ).val( regimenFiscal );
+		$( "#regimenFiscal" ).selectpicker( 'refresh' );
+		$( "#num_cuenta" ).val( data.num_cuenta );
+		$( "#banco" ).val( data.banco );
+		$( "#metodoPago" ).val( data.metodoPago );
+		$( "#metodoPago" ).selectpicker( 'refresh' );
+		$( "#formadePago" ).val( data.formadePago );
+		$( "#formadePago" ).selectpicker( 'refresh' );
+		let usoCfdi = data.usoCfdi ? data.usoCfdi : 'S01';
+		$( "#usoCfdi" ).val( usoCfdi );
+		$( "#comentarios" ).val( data.comentarios );
+	} );
+	$.post( "../ajax/pedido.php?op=mostrarDetallesFactura", {pedidoID: pedidoID}, function ( data, statusUsuario ) {
+		$( "#detallesFactura" ).html( data );
+	} );
+	$( "#btnGuardarFactura" ).prop( "disabled", false );
 	$( "#modalFacturas" ).modal( "show" );
 }
 
@@ -341,8 +392,14 @@ function modificarTotales() {
 	for (let i = 0; i < tot.length; i++) {
 		totales += parseFloat( tot[i].value );
 	}
-	console.log(totales);
 	$('#grantotal').html( totales.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'));
+}
+
+function eliminarDetalle( indice ) {
+	$( "#fila" + indice ).remove();
+	calcularTotales();
+	detalles = detalles - 1;
+	evaluar();
 }
 
 async function obtenerTipoCambio(moneda) {
@@ -386,6 +443,67 @@ function timbra( facturaID ) {
 			dialog.modal( 'hide' );
 		}
 	} );
+}
+
+function agregarDetalle( productoID, variante_id, nombreProducto, variante, imagen, precioVenta ) {
+	let imagenCuadro = ( imagen ) ? '<a href="' + imagen + '" data-featherlight="image"><img class="img-thumbnail" style="width:40px;height:auto;" src="' + imagen + '"></a>' : '<img class="img-thumbnail" style="width:40px;height:auto;" src="../public/images/placeholder.jpg">';
+	let cantidad = 1;
+	if ( productoID ) {
+		if ( document.getElementsByName( "contador[]" ).length != 0 ) {
+			var contadorprod = document.getElementsByName( "contador[]" );
+			var arrcontadorprod = [];
+			for ( var p = 0; p < contadorprod.length; p++ ) {
+				var contador0 = parseInt( contadorprod[ p ].value );
+				arrcontadorprod.push( contador0 );
+			}
+			var numbersprod = arrcontadorprod;
+			var numberprod2 = Math.max.apply( null, numbersprod );
+			var numberprod = parseInt( numberprod2 ) + 1;
+			var cont = parseInt( numberprod );
+		} else { }
+		if ( !cont ) {var cont = 0;}
+		let fila = '<tr class="filas" id="fila' + cont + '">' +
+			'	<td style="text-align:center;">' +
+			'	<input type="hidden" class="form-control" name="contador[]" id="contador' + cont + '" value="' + cont + '">' +
+			'		<button type="button" class="btn btn-danger btn-sm" onclick="eliminarDetalle(' + cont + ')"><i class="fas fa-times"></i></button>' +
+			'	</td>' +
+
+			//Cantidad
+			'	<td style="width:140px;!important">' +
+			'		<input type="number" min="1" step="1" style="text-align:right;" class="form-control" class="form-control" name="cantidad[]" id="cantidad' + cont + '" placeholder="Número de Cantidad" value="' + cantidad + '" oninput="modificarSubTotales(' + cont + ')" required>' +
+			'</td>' +
+
+			//Producto
+			'	<td>' +
+			'		<input type="hidden" class="form-control" name="contador[]" id="contador' + cont + '" value="' + cont + '">' +
+			'		<input type="hidden" name="variante_id[]" value="' + variante_id + '">' +
+			'		<input type="hidden" name="producto_id[]" value="' + productoID + '">' + variante +
+			'	</td>' +
+
+			//Variante
+			'	<td>' +
+			'		<textarea class="form-control" name="descripcion[]" id="descripcion' + cont + '" placeholder="Descripción" rows="3"></textarea>' +
+			'	</td>' +
+
+			//Imagen
+			'	<td style="width:140px;!important;text-align:center;">' +
+			imagenCuadro +
+			'	</td>' +
+
+			//Unitario
+			'	<td style="width:140px;!important;text-align:right;">' +
+			'		<input type="number" min=".01" step=".01" style="text-align:right;" class="form-control" class="form-control" name="precioVenta[]" id="precioVenta' + cont + '" placeholder="Precio Unitario" value="' + precioVenta + '" oninput="modificarSubTotales(' + cont + ')" required>' +
+			'	</td>' +
+			'	<td style="width:140px;!important;text-align:right;">' +
+			'		$<span id="subtotal_html' + cont + '">' + precioVenta + '</span>' +
+			'		<input type="hidden" class="form-control" name="subtotal[]" id="subtotal' + cont + '" value="' + precioVenta + '">' +
+			'	</td>' +
+			'</tr>';
+		cont++;
+		$( '#detalles' ).append( fila );
+		modificarTotales();
+	}
+
 }
 
 init();

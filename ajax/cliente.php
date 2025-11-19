@@ -14,9 +14,9 @@ $usuarioID=(isset($_SESSION["usuarioID"]))? $_SESSION["usuarioID"]:"";
 
 //INFORMACIÓN DE LOGIN WP
 $display_name=isset($_POST["display_name"])? limpiarCadena($_POST["display_name"]):"";
-$user_login=isset($_POST["user_login"])? limpiarCadena($_POST["user_login"]):"";
-$user_nicename=isset($_POST["user_nicename"])? limpiarCadena($_POST["user_nicename"]):"";
-$user_email=isset($_POST["user_email"])? limpiarCadena($_POST["user_email"]):"";
+// $user_login=isset($_POST["user_login"])? limpiarCadena($_POST["user_login"]):"";
+// $user_nicename=isset($_POST["user_nicename"])? limpiarCadena($_POST["user_nicename"]):"";
+// $user_email=isset($_POST["user_email"])? limpiarCadena($_POST["user_email"]):"";
 
 $ok = 0;
 $t_hasher = new PasswordHash(8, FALSE);
@@ -56,14 +56,14 @@ switch ($_GET["op"]){
 			}
 		}
 		if (empty($clienteID)){
-			$rspta=$clientes->insertar($display_name,$user_login,$user_nicename,$user_email,$contrasenna,$telefono,$calle,$num_ext,$num_int,$colonia,$poblacion,$edoPais,$cp,$razonSocial,$rfcCliente,$regimenFiscal,$num_cuenta,$banco,$metodoPago,$formadePago,$usoCfdi,$comentarios,$constancia,$moneda,$usuarioID);
+			$rspta=$clientes->insertar($display_name,$contrasenna,$telefono,$calle,$num_ext,$num_int,$colonia,$poblacion,$edoPais,$cp,$razonSocial,$rfcCliente,$regimenFiscal,$num_cuenta,$banco,$metodoPago,$formadePago,$usoCfdi,$comentarios,$constancia,$moneda,$usuarioID);
 			echo $rspta ? "Cliente registrado" : "El Cliente no se pudo registrar";
 		} else {
 			if (empty($contrasenna)){
-				$rspta=$clientes->editar_sinpass($clienteID,$display_name,$user_login,$user_nicename,$user_email,$contrasenna,$telefono,$calle,$num_ext,$num_int,$colonia,$poblacion,$edoPais,$cp,$razonSocial,$rfcCliente,$regimenFiscal,$num_cuenta,$banco,$metodoPago,$formadePago,$usoCfdi,$comentarios,$constancia,$moneda,$usuarioID);
+				$rspta=$clientes->editar_sinpass($clienteID,$display_name,$contrasenna,$telefono,$calle,$num_ext,$num_int,$colonia,$poblacion,$edoPais,$cp,$razonSocial,$rfcCliente,$regimenFiscal,$num_cuenta,$banco,$metodoPago,$formadePago,$usoCfdi,$comentarios,$constancia,$moneda,$usuarioID);
 				echo $rspta ? "Cliente actualizado" : "El Cliente no se pudo actualizar";
 			} else {
-				$rspta=$clientes->editar($clienteID,$display_name,$user_login,$user_nicename,$user_email,$contrasenna,$telefono,$calle,$num_ext,$num_int,$colonia,$poblacion,$edoPais,$cp,$razonSocial,$rfcCliente,$regimenFiscal,$num_cuenta,$banco,$metodoPago,$formadePago,$usoCfdi,$comentarios,$constancia,$moneda,$usuarioID);
+				$rspta=$clientes->editar($clienteID,$display_name,$contrasenna,$telefono,$calle,$num_ext,$num_int,$colonia,$poblacion,$edoPais,$cp,$razonSocial,$rfcCliente,$regimenFiscal,$num_cuenta,$banco,$metodoPago,$formadePago,$usoCfdi,$comentarios,$constancia,$moneda,$usuarioID);
 				echo $rspta ? "Cliente actualizado" : "El Cliente no se pudo actualizar";
 			}
 		}
@@ -148,7 +148,7 @@ switch ($_GET["op"]){
 
 	case 'select_cliente':
 		$rspta=$clientes->select_cliente();
-		echo '<option data-contacto="" data-nombre="" data-clienteid="0" value="0">--- SIN USER ---</option>';
+		echo '<option data-contacto="" data-nombre="" data-clienteid="0" value="0" selected>--- SIN USER ---</option>';
 		while ($reg = $rspta->fetch_object()){
 			echo '<option data-subtext="'.$reg->contactos.'" data-contacto="'.$reg->contactos.'" data-formapago="'.$reg->formadePago.'" data-nocuenta="'.$reg->num_cuenta.'" data-nombre="'.$reg->nombreCliente.'" data-clienteid="'.$reg->clienteID.'" data-banco="'.$reg->banco.'" value="'.$reg->clienteID.'">'.htmlspecialchars_decode($reg->nombreCliente).'</option>';
 		}
@@ -158,14 +158,14 @@ switch ($_GET["op"]){
 		$rspta=$clientes->select_cliente();
 		echo '<option data-contacto="" data-nombre="" data-clienteid="0" value="0" selected>---- TODOS ----</option>';
 		while ($reg = $rspta->fetch_object()){
-			echo '<option data-subtext="'.$reg->contactos.'" data-contacto="'.$reg->contactos.'" data-formapago="'.$reg->formadePago.'" data-nocuenta="'.$reg->num_cuenta.'" data-nombre="'.$reg->nombreClienteCliente.'" data-clienteid="'.$reg->clienteID.'" data-banco="'.$reg->banco.'" value="'.$reg->clienteID.'">'.htmlspecialchars_decode($reg->nombreClienteCliente).'</option>';
+			echo '<option data-subtext="'.$reg->contactos.'" data-contacto="'.$reg->contactos.'" data-formapago="'.$reg->formadePago.'" data-nocuenta="'.$reg->num_cuenta.'" data-nombre="'.$reg->nombreCliente.'" data-clienteid="'.$reg->clienteID.'" data-banco="'.$reg->banco.'" value="'.$reg->clienteID.'">'.htmlspecialchars_decode($reg->nombreCliente).'</option>';
 		}
 	break;
 
 	case 'select_cliente_factura':
 		$rspta=$clientes->select_cliente_factura();
 		while ($reg = $rspta->fetch_object()){
-			echo '<option style="color:#222;" data-subtext="'.$reg->razonSocial.'" data-contacto="'.$reg->contacto.'" data-formapago="'.$reg->formadePago.'" data-banco="'.$reg->banco.'" data-nocuenta="'.$reg->num_cuenta.'" data-cliente="'.$reg->cliente.'" data-clienteid="'.$reg->clienteID.'" data-calle="'.$reg->calle.'" data-numext="'.$reg->num_ext.'" data-numint="'.$reg->num_int.'" data-colonia="'.$reg->colonia.'" data-poblacion="'.$reg->poblacion.'" data-edopais="'.$reg->edoPais.'" data-cp="'.$reg->cp.'" data-rfccliente="'.$reg->rfcCliente.'" data-regimenfiscal="'.$reg->regimenFiscal.'" data-usocfdi="'.$reg->usoCfdi.'" data-metodopago="'.$reg->metodoPago.'" data-credito="'.$reg->credito.'" data-constancia="'.htmlspecialchars_decode($reg->constancia).'" value="'.$reg->clienteID.'">'.htmlspecialchars_decode($reg->nombreClienteCliente).'</option>';
+			echo '<option style="color:#222;" data-subtext="'.$reg->razonSocial.'" data-contacto="'.$reg->contacto.'" data-formapago="'.$reg->formadePago.'" data-banco="'.$reg->banco.'" data-nocuenta="'.$reg->num_cuenta.'" data-cliente="'.$reg->cliente.'" data-clienteid="'.$reg->clienteID.'" data-calle="'.$reg->calle.'" data-numext="'.$reg->num_ext.'" data-numint="'.$reg->num_int.'" data-colonia="'.$reg->colonia.'" data-poblacion="'.$reg->poblacion.'" data-edopais="'.$reg->edoPais.'" data-cp="'.$reg->cp.'" data-rfccliente="'.$reg->rfcCliente.'" data-regimenfiscal="'.$reg->regimenFiscal.'" data-usocfdi="'.$reg->usoCfdi.'" data-metodopago="'.$reg->metodoPago.'" data-credito="'.$reg->credito.'" data-constancia="'.htmlspecialchars_decode($reg->constancia).'" value="'.$reg->clienteID.'">'.htmlspecialchars_decode($reg->nombreCliente).'</option>';
 		}
 	break;
 

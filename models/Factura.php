@@ -143,7 +143,7 @@ Class Factura {
 	}
 
 	public function timbra_detallesFactura($facturaID){
-		$sql="SELECT dfi.factura_id,dfi.descripcion,dfi.cantidad AS cantidad,dfi.producto_id,dfi.cantidad,dfi.precioUnitario AS precioVenta,'01' AS claveIva,'H87' AS unidad,'Pieza' AS nombreMedida,dfi.factor,dfi.tasaCuota,dfi.ivaUnitario,fac.tipoCambio FROM facturaDetalle dfi INNER JOIN factura fac ON dfi.factura_id=fac.id WHERE dfi.factura_id='$facturaID'";
+		$sql="SELECT dfi.factura_id,dfi.descripcion,dfi.cantidad AS cantidad,dfi.producto_id,dfi.cantidad,dfi.precioUnitario AS precioVenta,'01' AS claveIva,'H87' AS unidad,'Pieza' AS nombreMedida,dfi.factor,dfi.tasaCuota,dfi.ivaUnitario,fac.tipoCambio FROM facturaDetalle dfi INNER JOIN factura fac ON dfi.factura_id=fac.id LEFT JOIN producto_facturacion profac ON dfi.producto_id = profac.producto_id LEFT JOIN unidadesmedida med ON profac.medida_id = med.id LEFT JOIN clavesfactura cla ON profac.clave_id = cla.id WHERE dfi.factura_id='$facturaID'";
 		return ejecutarConsulta($sql);
 	}
 

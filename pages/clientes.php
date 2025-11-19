@@ -182,7 +182,7 @@ if ($_SESSION['clientesver']==1){
 									placeholder="Observaciones"></textarea>
 							</div>
 						</div>
-						<div class="row" style="background-color:#ebdbf1;">
+						<!-- <div class="row" style="background-color:#ebdbf1;">
 							<div class="form-group col-lg-12 col-md-12 col-sm-12 mb-3 col-xs-12 mt-4">
 								<h3 class="box-title" style="font-size: 20px;">LOGIN WORDPRESS</h3>
 							</div>
@@ -196,7 +196,7 @@ if ($_SESSION['clientesver']==1){
 								<input type="text" class="form-control" name="contrasenna" id="contrasenna" min="8"
 									placeholder="Contraseña" title="Contraseña" autocomplete="new-password">
 							</div>
-						</div>
+						</div> -->
 						<div class="row pb-4" style="background-color:#f0f5ff;">
 							<div class="form-group col-lg-12 col-md-12 col-sm-12 mb-3 col-xs-12 mt-4">
 								<h3 class="box-title" style="font-size: 20px;">DIRECCIÓN</h3>

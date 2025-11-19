@@ -69,7 +69,7 @@ switch ($_GET["op"]){
 		while ($reg=$rspta->fetch_object()){
 			$imagen = ($reg->imagen)?'<a href="'.$reg->imagen.'" data-featherlight="image"><img class="img-thumbnail" style="width:40px;height:auto;" src="'.$reg->imagen.'"></a>' : '<img class="img-thumbnail" style="width:40px;height:auto;" src="../public/images/placeholder.jpg">';
 			$data[]=array(
-				"0"=>$reg->nombre.'<br><small><strong>SKU:</strong> '.$reg->sku.'</small>',
+				"0"=>$reg->nombre.' - ID: '.$reg->productoID.'<br><small><strong>SKU:</strong> '.$reg->sku.'</small>',
 				"1"=>$reg->nombreUnidad.' <small>('.$reg->unidad.')</small>',
 				"2"=>'$'.number_format($reg->precioVenta, 2, '.', ','),
 				"3"=>$imagen
