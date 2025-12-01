@@ -46,26 +46,6 @@ Class Cliente {
 		return $sw;
 	}
 
-	public function editar_sinpass($clienteID,$display_name,$telefono,$calle,$num_ext,$num_int,$colonia,$poblacion,$edoPais,$cp,$razonSocial,$rfcCliente,$regimenFiscal,$num_cuenta,$banco,$metodoPago,$formadePago,$usoCfdi,$comentarios,$constancia,$moneda,$usuarioID){
-		$sw=true;
-		$sql="UPDATE wp_users SET display_name='$display_name' WHERE ID='$clienteID'";
-		ejecutarConsulta($sql) or $sw = false;
-
-		if($sw==true){
-			$sql_del_fiscales = "DELETE FROM datos_fiscales WHERE cliente_id='$clienteID'";
-			ejecutarConsulta($sql_del_fiscales) or $sw = false;
-
-			if($sw==true){
-				$sql_fiscales = "INSERT INTO datos_fiscales (cliente_id,telefono,calle,num_ext,num_int,colonia,poblacion,edoPais,cp,razonSocial,rfcCliente,regimenFiscal,num_cuenta,banco,metodoPago,formadePago,usoCfdi,comentarios,constancia,moneda,user_id,created_at,activo) VALUES ('$clienteID','$telefono','$calle','$num_ext','$num_int','$colonia','$poblacion','$edoPais','$cp','$razonSocial','$rfcCliente','$regimenFiscal','$num_cuenta','$banco','$metodoPago','$formadePago','$usoCfdi','$comentarios','$constancia','$moneda','$usuarioID',NOW(),'1')";
-				ejecutarConsulta($sql_fiscales) or $sw = false;
-
-				$sql_historial = "INSERT INTO historial (usuarioID,created_at,registro,clienteID) SELECT '$usuarioID',NOW(),CONCAT(usr.nombre,' ha editado al cliente: ', '$display_name'),'$clienteID' FROM users usr INNER JOIN wp_users cli ON cli.ID='$clienteID' WHERE usr.id='$usuarioID'";
-				ejecutarConsulta($sql_historial);
-			}
-		}
-		return $sw;
-	}
-
 	//Implementamos un método para desactivar clientes
 	public function desactivar($clienteID,$usuarioID){
 		$sql_historial = "INSERT INTO historial (usuarioID,created_at,registro,clienteID) SELECT '$usuarioID',NOW(),CONCAT(usr.nombre,' ha desactivado a: ', cli.display_name),'$clienteID' FROM users usr INNER JOIN wp_users cli ON cli.ID='$clienteID' WHERE usr.id='$usuarioID'";

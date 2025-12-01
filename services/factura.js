@@ -416,7 +416,8 @@ function mostrarPagos( facturaID ) {
 		"order": [ 0, "desc" ]//Ordenar (columna,orden)
 	} ).DataTable();
 	$( "#tblPagos" ).css( "width", "100%" );
-	$( "#modalPagos" ).modal( "toggle" );
+	const modalPagos = new bootstrap.Modal( document.getElementById( 'modalPagos' ) );
+	modalPagos.toggle();
 }
 
 function guardaryeditar( e ) {
@@ -447,17 +448,17 @@ function timbra( facturaID ) {
 				closeButton: false
 			} );
 			$.post( "../ajax/factura.php?op=timbra", {facturaID: facturaID}, function ( data, status ) {
-				dialog.modal( 'hide' );
+				bootstrap.Modal.getInstance( dialog ).hide();
 				bootbox.alert( data );
 				tabla.clear().draw();
 				tabla.ajax.reload();
 			} ).fail( function () {
-				dialog.modal( 'hide' );
+				bootstrap.Modal.getInstance( dialog ).hide();
 				bootbox.alert( 'No se ha podido timbrar la factura' );
 			} ).done( function () {
-				dialog.modal( 'hide' );
+				bootstrap.Modal.getInstance( dialog ).hide();
 			} );
-			dialog.modal( 'hide' );
+			bootstrap.Modal.getInstance( dialog ).hide();
 		}
 	} );
 }
@@ -581,7 +582,8 @@ function BootboxContent() {
 }
 
 function pagada( facturaID ) {
-	$( "#modalFacturaPagada" ).modal( "show" );
+	const modalFacturaPagada = new bootstrap.Modal( document.getElementById( 'modalFacturaPagada' ) );
+	modalFacturaPagada.show();
 	document.getElementById( "facturaID_pagada" ).value = facturaID;
 	document.getElementById( "facturaID_modal" ).innerHTML = facturaID;
 }
@@ -599,7 +601,7 @@ function pagadaFactura() {
 			bootbox.alert( resp );
 			tabla.clear().draw();
 			tabla.ajax.reload();
-			$( "#modalFacturaPagada" ).modal( "hide" );
+			bootstrap.Modal.getInstance( document.getElementById( 'modalFacturaPagada' ) ).hide();
 			limpiarModal();
 		} );
 	}
@@ -619,14 +621,15 @@ function modalCopiarFactura( facturaID, cliente_id ) {
 	document.getElementById( "noFacturaCopia" ).innerHTML = facturaID;
 	$( "#cliente_copia" ).val( cliente_id );
 	$( "#cliente_copia" ).selectpicker( 'refresh' );
-	$( "#copiaFactura" ).modal( "show" );
+	const copiaFacturaModal = new bootstrap.Modal( document.getElementById( 'copiaFactura' ) );
+	copiaFacturaModal.show();
 
-	$( "#copiaFactura" ).on( "hidden.bs.modal", function () {
+	document.getElementById( 'copiaFactura' ).addEventListener( 'hidden.bs.modal', function () {
 		document.getElementById( "noFacturaCopia" ).innerHTML = '';
 		document.getElementById( "factura_id_copia" ).value = '';
 		$( "#cliente_copia" ).val( '' );
 		$( "#cliente_copia" ).selectpicker( 'refresh' );
-	} );
+	}, {once: true} );
 }
 
 function copiaFactura( e ) {
@@ -645,34 +648,35 @@ function copiaFactura( e ) {
 		processData: false,
 
 		success: function ( datos ) {
-			dialog.modal( 'hide' );
+			bootstrap.Modal.getInstance( dialog ).hide();
 			bootbox.alert( datos );
 			tabla.clear().draw();
 			tabla.ajax.reload();
 		},
 		error: function ( datos ) {
 			bootbox.alert( datos );
-			dialog.modal( 'hide' );
+			bootstrap.Modal.getInstance( dialog ).hide();
 		}
 	} );
-	dialog.modal( 'hide' );
+	bootstrap.Modal.getInstance( dialog ).hide();
 }
 
 //Función para Cancelar la Factura
 function modalCancelaFactura( facturaID, cliente_id ) {
 	$( '#facturaID_cancela' ).val( facturaID );
+	const cancelaFacturaModal = new bootstrap.Modal( document.getElementById( 'cancelaFactura' ) );
+	cancelaFacturaModal.show();
 	$.post( "../ajax/factura.php?op=obtener_facturas_cliente", {cliente_id: cliente_id}, function ( e ) {
 		$( "#folioSustitucion" ).html( e );
 		$( "#folioSustitucion" ).selectpicker( 'refresh' );
 	} );
-	$( "#cancelaFactura" ).modal( 'show' );
-	$( '#cancelaFactura' ).on( 'hidden.bs.modal', function () {
+	document.getElementById( 'cancelaFactura' ).addEventListener( 'hidden.bs.modal', function () {
 		$( '#facturaID_cancela' ).val( '' );
 		document.getElementById( "motivo01" ).checked = true;
 		document.getElementById( "folioSustitucion" ).disabled = false;
 		$( "#folioSustitucion" ).val( "" );
 		$( "#folioSustitucion" ).selectpicker( 'refresh' );
-	} );
+	}, {once: true} );
 }
 
 function cancelar_factura() {
@@ -690,7 +694,7 @@ function cancelar_factura() {
 		} );
 		$.post( "../ajax/factura.php?op=cancela_factura", {facturaID: facturaID, facturaIDRelacionada: facturaIDRelacionada, folioSustitucion: folioSustitucion, motivo: motivo}, function ( e ) {
 			bootbox.alert( e );
-			dialog.modal( 'hide' );
+			bootstrap.Modal.getInstance( dialog ).hide();
 			//var archivocancelado = "../facturar/archs_cfdi/cancelaciones/Factura - " + facturaID + " - CANCELADA.pdf";
 			//window.open( archivocancelado );
 			tabla.clear().draw();
@@ -739,7 +743,7 @@ function enviaEmailFactura( e ) {
 		processData: false,
 
 		success: function ( datos ) {
-			dialog.modal( 'hide' );
+			bootstrap.Modal.getInstance( dialog ).hide();
 			bootbox.alert( datos );
 			marcarFacturaEnviada();
 		}

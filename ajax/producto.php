@@ -2,29 +2,30 @@
 if (strlen(session_id()) < 1) 
 	session_start();
 
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
 require_once "../models/Producto.php";
 $productos=new Producto();
 
+$id=isset($_POST["id"])? limpiarCadena($_POST["id"]):"";
 $productoID=isset($_POST["productoID"])? limpiarCadena($_POST["productoID"]):"";
 $nombre=isset($_POST["nombre"])? limpiarCadena($_POST["nombre"]):"";
 $precioVenta=isset($_POST["precioVenta"])? limpiarCadena($_POST["precioVenta"]):"";
-$unidadmedida_id=isset($_POST["unidadmedida_id"])? limpiarCadena($_POST["unidadmedida_id"]):"";
-$clavefacturacion_id=isset($_POST["clavefacturacion_id"])? limpiarCadena($_POST["clavefacturacion_id"]):"";
+$medida_id=isset($_POST["medida_id"])? limpiarCadena($_POST["medida_id"]):"";
+$clave_id=isset($_POST["clave_id"])? limpiarCadena($_POST["clave_id"]):"";
 $observaciones=isset($_POST["observaciones"])? limpiarCadena($_POST["observaciones"]):"";
 
 switch ($_GET["op"]){
 	case 'guardaryeditar':
-		if (!file_exists($_FILES['imagen']['tmp_name']) || !is_uploaded_file($_FILES['imagen']['tmp_name'])){
-			$imagen=$_POST["imagenActual"];
+		if($id==""){
+			$rspta=$productos->guardar($productoID,$nombre,$precioVenta,$medida_id,$clave_id,$observaciones);
+			echo $rspta ? "Producto registrado" : "El Producto no se pudo registrar";
 		} else {
-			if ($_FILES['imagen']['type'] == "image/jpg" || $_FILES['imagen']['type'] == "image/jpeg" || $_FILES['imagen']['type'] == "image/png" || $_FILES['imagen']['type'] == "image/gif" || $_FILES['imagen']['type'] == "application/pdf"){
-				$ext = explode(".", $_FILES["imagen"]["name"]);
-				$imagen = round(microtime(true)). '.' . end($ext);
-				move_uploaded_file($_FILES["imagen"]["tmp_name"], "../public/files/productos/" . $imagen);
-			}
-		}
-			$rspta=$productos->editar($productoID,$nombre,$precioVenta,$unidadmedida_id,$clavefacturacion_id,$observaciones,$imagen);
+			$rspta=$productos->editar($id,$productoID,$nombre,$precioVenta,$medida_id,$clave_id,$observaciones);
 			echo $rspta ? "Producto actualizado" : "El Producto no se pudo actualizar";
+		}
 	break;
 
 	case 'mostrar':

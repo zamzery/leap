@@ -236,7 +236,7 @@ if ($_SESSION['clientesver']==1){
 							</div>
 							<div class="form-group col-lg-3 col-md-3 col-sm-6">
 								<label><text style="color:red;">*</text>C.P.: <small>Extranjeros poner:
-										44520</small></label>
+										44460</small></label>
 								<input type="text" class="form-control" name="cp" id="cp" minlength="5" maxlength="5"
 									placeholder="Código Postal" required>
 							</div>

@@ -8,13 +8,18 @@ Class Producto {
 		
 	}
 
-	public function editar($productoID,$nombre,$precioVenta,$unidadmedida_id,$clavefacturacion_id,$observaciones,$imagen){
-		$sql="UPDATE wp_post SET post_title='$nombre',precioVenta='$precioVenta',unidadmedida_id='$unidadmedida_id',clavefacturacion_id='$clavefacturacion_id',post_content='$observaciones',imagen='$imagen',updated_at=NOW() WHERE product_id='$productoID'";
+	public function guardar($productoID,$nombre,$precioVenta,$unidadmedida_id,$clavefacturacion_id,$observaciones){
+		$sql="INSERT INTO producto_facturacion (producto_id,nombre,precioVenta,medida_id,clave_id,observaciones) VALUES ('$productoID','$nombre','$precioVenta','$unidadmedida_id','$clavefacturacion_id','$observaciones')";
+		return ejecutarConsulta($sql);
+	}
+
+	public function editar($id,$productoID,$nombre,$precioVenta,$unidadmedida_id,$clavefacturacion_id,$observaciones){
+		$sql="UPDATE producto_facturacion SET nombre='$nombre',precioVenta='$precioVenta',medida_id='$unidadmedida_id',clave_id='$clavefacturacion_id',observaciones='$observaciones' WHERE producto_id='$productoID'";
 		return ejecutarConsulta($sql);
 	}
 
 	public function mostrar($productoID){
-		$sql="SELECT p.ID AS productoID,p.post_type,p.post_status,p.post_title AS nombre,pm1.meta_value AS precioVenta,pm2.meta_value AS sku,p.ID,t.name AS categoria,img.guid AS imagen,p.post_content AS observaciones,IFNULL(fac.clave_id,1) AS clave_id,IFNULL(fac.medida_id,1) AS medida_id,IFNULL(med.nombre,'Pieza') AS nombreUnidad,IFNULL(med.unidad,'H87') AS unidad,IFNULL(cla.clave,'25172100') AS nombreClave
+		$sql="SELECT fac.id,p.ID AS productoID,p.post_type,p.post_status,p.post_title AS nombre,pm1.meta_value AS precioVenta,pm2.meta_value AS sku,p.ID,t.name AS categoria,img.guid AS imagen,p.post_content AS observaciones,IFNULL(fac.clave_id,1) AS clave_id,IFNULL(fac.medida_id,1) AS medida_id,IFNULL(med.nombre,'Pieza') AS nombreUnidad,IFNULL(med.unidad,'H87') AS unidad,IFNULL(cla.clave,'25172100') AS nombreClave
 			FROM wp_posts p
 			LEFT JOIN wp_posts img ON p.ID = img.post_parent AND img.post_type = 'attachment' AND img.post_mime_type LIKE 'image/%'
 			LEFT JOIN wp_postmeta pm1 ON p.ID = pm1.post_id AND pm1.meta_key = '_price'
@@ -63,7 +68,7 @@ Class Producto {
 	}
 
 	public function select_producto(){
-		$sql="SELECT id AS productoID,post_title AS nombre,activo FROM wp_post WHERE activo='1' ORDER BY post_title ASC";
+		$sql="SELECT prod.id AS productoID,fac.nombre,fac.precioVenta,fac.medida_id,fac.clave_id,fac.observaciones FROM wp_post prod LEFT JOIN producto_facturacion fac ON prod.id = fac.producto_id WHERE prod.activo='1' ORDER BY post_title ASC";
 		return ejecutarConsulta($sql);
 	}
 }

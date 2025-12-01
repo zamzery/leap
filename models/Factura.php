@@ -128,7 +128,7 @@ Class Factura {
 
 	//Implementar un método para listar los registros
 	public function listar(){
-		$sql="SELECT fac.id AS facturaID,fac.serie,fac.metodoPago,fac.fecha,fac.folioFiscal,fac.claveTipoComprobante,fac.usoCfdi,fac.formadePago,fac.descuento,fac.moneda,fac.tipoCambio,fac.nombrePDF,fac.nombreXML,fac.cliente_id,fac.user_id,fac.status,cli.razonSocial,cli.nombre AS nombreCliente,cli.regimenFiscal,usr.nombre,fac.emailEnviado,tot.subtotal,tot.subtotal*0.16 AS iva,tot.subtotal*1.16 AS total,IFNULL(pagado.pagado,0) AS pagado,fac.nombrePDFCancelado,fac.nombreXMLCancelado FROM factura fac LEFT JOIN (SELECT factura_id,SUM(subtotal) AS subtotal FROM facturaDetalle GROUP BY factura_id) tot ON fac.id=tot.factura_id LEFT JOIN users usr ON fac.user_id=usr.id LEFT JOIN (SELECT detpag.factura_id,SUM(detpag.estePago) AS pagado FROM complementoDetalles detpag LEFT JOIN complementos comp ON detpag.complemento_id=comp.id WHERE comp.statusPago!='Cancelado' GROUP BY factura_id) pagado ON fac.id=pagado.factura_id LEFT JOIN clientes cli ON fac.cliente_id=cli.id GROUP BY fac.id";
+		$sql="SELECT fac.id AS facturaID,fac.serie,fac.metodoPago,fac.fecha,fac.folioFiscal,fac.claveTipoComprobante,fac.usoCfdi,fac.formadePago,fac.descuento,fac.moneda,fac.tipoCambio,fac.nombrePDF,fac.nombreXML,fac.cliente_id,fac.user_id,fac.status,IFNULL(dat.razonSocial,ped.nombreCliente) AS nombreClienteIFNULL(dat.razonSocial,ped.nombreCliente) AS razonSocial,cli.regimenFiscal,usr.nombre,fac.emailEnviado,tot.subtotal,tot.subtotal*0.16 AS iva,tot.subtotal*1.16 AS total,IFNULL(pagado.pagado,0) AS pagado,fac.nombrePDFCancelado,fac.nombreXMLCancelado FROM factura fac LEFT JOIN pedidos ped ON fac.id=ped.factura_id LEFT JOIN datos_fiscales dat ON ped.cliente_id=dat.cliente_id LEFT JOIN (SELECT factura_id,SUM(subtotal) AS subtotal FROM facturaDetalle GROUP BY factura_id) tot ON fac.id=tot.factura_id LEFT JOIN users usr ON fac.user_id=usr.id LEFT JOIN (SELECT detpag.factura_id,SUM(detpag.estePago) AS pagado FROM complementoDetalles detpag LEFT JOIN complementos comp ON detpag.complemento_id=comp.id WHERE comp.statusPago!='Cancelado' GROUP BY factura_id) pagado ON fac.id=pagado.factura_id LEFT JOIN clientes cli ON fac.cliente_id=cli.id GROUP BY fac.id";
 		return ejecutarConsulta($sql);
 	}
 
@@ -138,17 +138,27 @@ Class Factura {
 	}
 
 	public function timbra($facturaID){
-		$sql="SELECT fac.id AS facturaID,fac.serie,fac.metodoPago,fac.fecha,fac.folioFiscal,fac.claveTipoComprobante,fac.usoCfdi,fac.credito,fac.fechaCompromiso,met.codigo AS formadePago,fac.descuento,det.subtotal,fac.moneda,fac.tipoCambio,det.subtotal*0.16 AS iva,det.subtotal*1.16 AS total,fac.nombrePDF,fac.nombreXML,fac.cliente_id,fac.user_id,fac.conPago,fac.status,cli.razonSocial,cli.regimenFiscal,cli.nombre AS nombreCliente,cli.rfcCliente,cli.num_cuenta,cli.calle,cli.num_ext,cli.num_int,cli.colonia,cli.poblacion,cli.edoPais,cli.cp,u.nombre,fac.facturaFolioRelacionada,fac.facturaCfdiRelacionada,fac.tipoRelacion,fac.totalFacturaRelacionada,fac.comentarios AS comentarioAdicional FROM factura fac LEFT JOIN (SELECT factura_id,SUM(subtotal) AS subtotal FROM facturaDetalle GROUP BY factura_id) det ON fac.id=det.factura_id LEFT JOIN clientes cli ON fac.cliente_id=cli.id LEFT JOIN users u ON fac.user_id=u.id LEFT JOIN metodopagos met ON fac.formadePago=met.id WHERE fac.id='$facturaID'";
+		$sql="SELECT fac.id AS facturaID,fac.serie,fac.metodoPago,fac.fecha,fac.folioFiscal,fac.claveTipoComprobante,fac.usoCfdi,fac.credito,fac.fechaCompromiso,IFNULL(met.codigo,fac.formadePago) AS formadePago,fac.descuento,det.subtotal,fac.moneda,fac.tipoCambio,det.subtotal*0.16 AS iva,det.subtotal*1.16 AS total,fac.nombrePDF,fac.nombreXML,fac.cliente_id,fac.user_id,fac.conPago,fac.status,cli.razonSocial,cli.regimenFiscal,cli.razonSocial AS nombreCliente,cli.rfcCliente,cli.num_cuenta,cli.calle,cli.num_ext,cli.num_int,cli.colonia,cli.poblacion,cli.edoPais,cli.cp,u.nombre,fac.facturaFolioRelacionada,fac.facturaCfdiRelacionada,fac.tipoRelacion,fac.totalFacturaRelacionada,fac.comentarios AS comentarioAdicional FROM factura fac LEFT JOIN (SELECT factura_id,SUM(subtotal) AS subtotal FROM facturaDetalle GROUP BY factura_id) det ON fac.id=det.factura_id LEFT JOIN datos_fiscales cli ON fac.cliente_id=cli.cliente_id LEFT JOIN users u ON fac.user_id=u.id LEFT JOIN metodopagos met ON fac.formadePago=met.id WHERE fac.id='$facturaID'";
+		return ejecutarConsulta($sql);
+	}
+
+	public function timbra_detallesFacturaExtranjero($facturaID){
+		$sql="SELECT dfi.factura_id,dfi.descripcion,prod.post_title AS nombreProducto,dfi.cantidad AS cantidad,dfi.producto_id,dfi.cantidad,dfi.precioUnitario AS precioVenta,dfi.claveIva,'H87' AS unidad,'Pieza' AS nombreMedida,dfi.factor,dfi.tasaCuota,dfi.ivaUnitario,fac.tipoCambio FROM facturaDetalle dfi INNER JOIN factura fac ON dfi.factura_id=fac.id LEFT JOIN producto_facturacion profac ON dfi.producto_id = profac.producto_id INNER JOIN wp_posts prod ON dfi.producto_id = prod.ID LEFT JOIN unidadesmedida med ON profac.medida_id = med.id LEFT JOIN clavesfactura cla ON profac.clave_id = cla.id WHERE dfi.factura_id='$facturaID'";
 		return ejecutarConsulta($sql);
 	}
 
 	public function timbra_detallesFactura($facturaID){
-		$sql="SELECT dfi.factura_id,dfi.descripcion,dfi.cantidad AS cantidad,dfi.producto_id,dfi.cantidad,dfi.precioUnitario AS precioVenta,'01' AS claveIva,'H87' AS unidad,'Pieza' AS nombreMedida,dfi.factor,dfi.tasaCuota,dfi.ivaUnitario,fac.tipoCambio FROM facturaDetalle dfi INNER JOIN factura fac ON dfi.factura_id=fac.id LEFT JOIN producto_facturacion profac ON dfi.producto_id = profac.producto_id LEFT JOIN unidadesmedida med ON profac.medida_id = med.id LEFT JOIN clavesfactura cla ON profac.clave_id = cla.id WHERE dfi.factura_id='$facturaID'";
+		$sql="SELECT dfi.factura_id,dfi.descripcion,prod.post_title AS nombreProducto,dfi.cantidad AS cantidad,dfi.producto_id,dfi.cantidad,dfi.precioUnitario/1.16 AS precioVenta,dfi.claveIva,'H87' AS unidad,'Pieza' AS nombreMedida,dfi.factor,dfi.tasaCuota,dfi.ivaUnitario,fac.tipoCambio FROM facturaDetalle dfi INNER JOIN factura fac ON dfi.factura_id=fac.id LEFT JOIN producto_facturacion profac ON dfi.producto_id = profac.producto_id INNER JOIN wp_posts prod ON dfi.producto_id = prod.ID LEFT JOIN unidadesmedida med ON profac.medida_id = med.id LEFT JOIN clavesfactura cla ON profac.clave_id = cla.id WHERE dfi.factura_id='$facturaID'";
 		return ejecutarConsulta($sql);
 	}
 
-	public function guardaFactura($facturaID,$NomArchPDF,$NomArchXML,$UUID){	
-		$sql="UPDATE factura SET status='Facturado',nombrePDF='$NomArchPDF',nombreXML='$NomArchXML',folioFiscal='$UUID' WHERE id='$facturaID'";
+	public function guardaFacturaXML($facturaID,$NomArchXML){	
+		$sql="UPDATE factura SET status='Timbrada',nombreXML='$NomArchXML' WHERE id='$facturaID'";
+		return ejecutarConsulta($sql);
+	}
+
+	public function guardaFacturaPDF($facturaID,$NomArchPDF,$UUID){	
+		$sql="UPDATE factura SET status='Facturado',nombrePDF='$NomArchPDF',folioFiscal='$UUID' WHERE id='$facturaID'";
 		return ejecutarConsulta($sql);
 	}
 
@@ -168,12 +178,12 @@ Class Factura {
 	}
 
 	public function cancela_factura($facturaID){
-		$sql="SELECT fac.id AS facturaID,fac.folioFiscal,fac.serie,fac.metodoPago,fac.fecha,fac.claveTipoComprobante,fac.usoCfdi,fac.formadePago,fac.descuento,tot.subtotal,tot.subtotal*0.16 AS iva,tot.subtotal*1.16 AS total,fac.moneda,fac.tipoCambio,fac.cliente_id,fac.user_id,fac.conPago,fac.cliente_id,cli.razonSocial,cli.nombre AS nombreCliente,cli.rfcCliente,cli.num_cuenta,fac.formadePago AS forma_pago,cli.calle,cli.num_ext,cli.num_int,cli.colonia,cli.poblacion,cli.edoPais,cli.cp,u.nombre AS nombreUsuario,fac.nombreXML,fac.nombrePDF FROM factura fac INNER JOIN facturaDetalle det ON fac.id=det.factura_id INNER JOIN clientes cli ON fac.cliente_id=cli.id INNER JOIN (SELECT factura_id,SUM(subtotal) AS subtotal FROM facturaDetalle GROUP BY factura_id) tot ON fac.id=tot.factura_id INNER JOIN users u ON fac.user_id=u.id WHERE fac.id='$facturaID' GROUP BY fac.id";
+		$sql="SELECT fac.id AS facturaID,fac.serie,fac.metodoPago,fac.fecha,fac.folioFiscal,fac.claveTipoComprobante,fac.usoCfdi,fac.credito,fac.fechaCompromiso,fac.formadePago,fac.descuento,tot.subtotal/1.16 AS subtotal,fac.moneda,fac.tipoCambio,fac.nombrePDF,fac.nombreXML,fac.cliente_id,fac.user_id,fac.conPago,fac.status,cli.razonSocial,cli.regimenFiscal,cli.razonSocial AS nombreCliente,cli.rfcCliente,cli.num_cuenta,cli.calle,cli.num_ext,cli.num_int,cli.colonia,cli.poblacion,cli.edoPais,cli.cp,u.nombre,fac.facturaFolioRelacionada,fac.facturaCfdiRelacionada,fac.tipoRelacion,fac.totalFacturaRelacionada,fac.comentarios AS comentarioAdicional FROM factura fac JOIN (SELECT factura_id,SUM(subtotal) AS subtotal FROM facturaDetalle GROUP BY factura_id) tot ON fac.id=tot.factura_id LEFT JOIN datos_fiscales cli ON fac.cliente_id=cli.cliente_id LEFT JOIN users u ON fac.user_id=u.id LEFT JOIN metodopagos met ON fac.formadePago=met.id WHERE fac.id='$facturaID' GROUP BY fac.id";
 		return ejecutarConsulta($sql);
 	}
 
 	public function guardaFacturaCancelada($facturaID,$rutaPDF,$rutaXML,$motivo,$facturaIDRelacionada){
-		$sql="UPDATE factura SET nombrePDFCancelado='$rutaPDF',nombreXMLCancelado='$rutaXML',motivo='$motivo',folioSustitucion='$facturaIDRelacionada' WHERE id='$facturaID'";
+		$sql="UPDATE factura SET nombrePDFCancelado='$rutaPDF',nombreXMLCancelado='$rutaXML',motivo='$motivo',folioSustitucion='$facturaIDRelacionada',pedido='0' WHERE id='$facturaID'";
 		return ejecutarConsulta($sql);
 	}
 
@@ -188,7 +198,7 @@ Class Factura {
 	}
 
 	public function obtener_facturas_cliente($cliente_id){
-		$sql="SELECT fac.id AS facturaID,tot.subtotal,fac.serie,fac.folioFiscal,fac.status,cli.nombre AS nombreCliente,cli.razonSocial FROM factura fac INNER JOIN clientes cli ON fac.cliente_id=cli.id LEFT JOIN (SELECT factura_id,SUM(subtotal) AS subtotal FROM facturaDetalle GROUP BY factura_id) tot ON fac.id=tot.factura_id WHERE fac.cliente_id='$cliente_id' AND fac.status!='Cancelado'";
+		$sql="SELECT fac.id AS facturaID,tot.subtotal,fac.serie,fac.folioFiscal,fac.status,IFNULL(ped.nombreCliente,dat.razonSocial) AS nombreCliente,IFNULL(ped.nombreCliente,dat.razonSocial) AS razonSocial FROM factura fac LEFT JOIN pedidos ped ON fac.id=ped.factura_id LEFT JOIN datos_fiscales dat ON fac.cliente_id=dat.cliente_id LEFT JOIN (SELECT factura_id,SUM(subtotal) AS subtotal FROM facturaDetalle GROUP BY factura_id) tot ON fac.id=tot.factura_id WHERE fac.cliente_id='$cliente_id' AND fac.status='Timbrada' GROUP BY fac.id";
 		return ejecutarConsulta($sql);
 	}
 

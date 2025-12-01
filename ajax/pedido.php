@@ -2,9 +2,9 @@
 if (strlen(session_id()) < 1) 
 	session_start();
 
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
+// ini_set('display_errors', 1);
+// ini_set('display_startup_errors', 1);
+// error_reporting(E_ALL);
 
 require_once "../models/Pedido.php";
 $pedidos=new Pedido();
@@ -66,23 +66,23 @@ $nombreCliente=isset($_POST["nombreCliente"])? limpiarCadena($_POST["nombreClien
 
 switch ($_GET["op"]){
 	case 'guardaryeditar':
-			if(empty($pedidoID)){
-				$rspta=$pedidos->insertar($clienteID,$nombreCliente,$observaciones,$producto_id,$variante_id,$descripcion,$cantidad,$precioVenta);
-				echo $rspta ? "Pedido registrado" : "Pedido no se pudo registrar";
-			} else{
-				$rspta=$pedidos->editar($pedidoID,$clienteID,$nombreCliente,$observaciones,$producto_id,$variante_id,$descripcion,$cantidad,$precioVenta);
-				echo $rspta ? "Pedido actualizado" : "El Pedido no se pudo actualizar";
-			}
+		if(empty($pedidoID)){
+			$rspta=$pedidos->insertar($clienteID,$nombreCliente,$observaciones,$producto_id,$variante_id,$descripcion,$cantidad,$precioVenta);
+			echo $rspta ? "Pedido registrado" : "Pedido no se pudo registrar";
+		} else{
+			$rspta=$pedidos->editar($pedidoID,$clienteID,$nombreCliente,$observaciones,$producto_id,$variante_id,$descripcion,$cantidad,$precioVenta);
+			echo $rspta ? "Pedido actualizado" : "El Pedido no se pudo actualizar";
+		}
 	break;
 
 	case 'guardaryeditar_factura':
-			if(empty($facturaID)){
-				$rspta=$pedidos->insertar_factura($serie,$metodoPago,$claveTipoComprobante,$usoCfdi,$formadePago,$descuento,$moneda,$tipoCambio,$cliente_id,$razonSocial,$rfcCliente,$usuarioID,$comentarios,$pedido_id,$user_login,$user_nicename,$email_cliente,$contrasenna,$telefono,$calle,$num_ext,$num_int,$colonia,$poblacion,$edoPais,$cp,$regimenFiscal,$num_cuenta,$banco,$producto_id,$descripcion,$cantidad,$precioVenta,$subtotal);
-				echo $rspta ? "Factura registrada" : "Factura no se pudo registrar";
-			} else{
-				$rspta=$pedidos->editar_factura($facturaID,$serie,$metodoPago,$claveTipoComprobante,$usoCfdi,$formadePago,$descuento,$moneda,$tipoCambio,$cliente_id,$razonSocial,$rfcCliente,$usuarioID,$comentarios,$pedido_id,$user_login,$user_nicename,$email_cliente,$contrasenna,$telefono,$calle,$num_ext,$num_int,$colonia,$poblacion,$edoPais,$cp,$regimenFiscal,$num_cuenta,$banco,$producto_id,$descripcion,$cantidad,$precioVenta,$subtotal);
-				echo $rspta ? "Factura actualizada" : "El Factura no se pudo actualizar";
-			}
+		if(empty($facturaID)){
+			$rspta=$pedidos->insertar_factura($serie,$metodoPago,$claveTipoComprobante,$usoCfdi,$formadePago,$descuento,$moneda,$tipoCambio,$cliente_id,$razonSocial,$rfcCliente,$usuarioID,$comentarios,$pedido_id,$user_login,$user_nicename,$email_cliente,$contrasenna,$telefono,$calle,$num_ext,$num_int,$colonia,$poblacion,$edoPais,$cp,$regimenFiscal,$num_cuenta,$banco,$producto_id,$descripcion,$cantidad,$precioVenta,$subtotal);
+			echo $rspta ? "Factura registrada" : "Factura no se pudo registrar";
+		} else{
+			$rspta=$pedidos->editar_factura($facturaID,$serie,$metodoPago,$claveTipoComprobante,$usoCfdi,$formadePago,$descuento,$moneda,$tipoCambio,$cliente_id,$razonSocial,$rfcCliente,$usuarioID,$comentarios,$pedido_id,$user_login,$user_nicename,$email_cliente,$contrasenna,$telefono,$calle,$num_ext,$num_int,$colonia,$poblacion,$edoPais,$cp,$regimenFiscal,$num_cuenta,$banco,$producto_id,$descripcion,$cantidad,$precioVenta,$subtotal);
+			echo $rspta ? "Factura actualizada" : "El Factura no se pudo actualizar";
+		}
 	break;
 
 	case 'mostrar':
@@ -144,11 +144,11 @@ switch ($_GET["op"]){
 
 				//Subtotal
 				<td style="width:140px;!important;text-align:right;">
-					$<span id="subtotal_html'.$reg->producto_id.'">'.number_format($reg->precioVenta, 2, '.', ',').'</span>
+					$<span id="subtotal_html'.$reg->producto_id.'">'.number_format($reg->precioVenta*$reg->cantidad, 2, '.', ',').'</span>
 					<input type="hidden" class="form-control" name="subtotal[]" id="subtotal'.$reg->producto_id.'" value="'.number_format($reg->precioVenta, 2, '.', '').'">
 				</td>
 				</tr>';
-				$precioVenta=floatval(str_replace(',','',$reg->precioVenta));
+				$precioVenta=floatval(str_replace(',','',$reg->precioVenta*$reg->cantidad));
 				$totales=$totales+$precioVenta;
 		}
 		echo '<tfoot>
@@ -162,7 +162,7 @@ switch ($_GET["op"]){
 		if($tipo=='1'){
 			$rspta=$pedidos->obtener_datos_factura($pedidoID);
 		} else {
-			$rspta=$pedidos->mostrar_pedido($pedidoID);
+			$rspta=$pedidos->ver_factura($facturaID);
 		}
 		echo json_encode($rspta);
 	break;
@@ -221,8 +221,8 @@ switch ($_GET["op"]){
 
 				//Subtotal
 				<td style="width:140px;!important;text-align:right;">
-					$<span id="subtotal_html'.$reg->producto_id.'">'.number_format($reg->precioVenta, 2, '.', ',').'</span>
-					<input type="hidden" class="form-control" name="subtotal[]" id="subtotal'.$reg->producto_id.'" value="'.number_format($reg->precioVenta, 2, '.', '').'">
+					$<span id="subtotal_html'.$reg->producto_id.'">'.number_format($reg->precioVenta*$reg->cantidad, 2, '.', ',').'</span>
+					<input type="hidden" class="form-control" name="subtotal[]" id="subtotal'.$reg->producto_id.'" value="'.number_format($reg->precioVenta*$reg->cantidad, 2, '.', '').'">
 				</td>
 				<script>
 					setTimeout(function(){
@@ -287,8 +287,8 @@ switch ($_GET["op"]){
 
 				//Subtotal
 				<td style="width:140px;!important;text-align:right;">
-					$<span id="subtotal_html'.$reg->producto_id.'">'.number_format($reg->precioVenta, 2, '.', ',').'</span>
-					<input type="hidden" class="form-control" name="subtotal[]" id="subtotal'.$reg->producto_id.'" value="'.number_format($reg->precioVenta, 2, '.', '').'">
+					$<span id="subtotal_html'.$reg->producto_id.'">'.number_format($reg->precioVenta*$reg->cantidad, 2, '.', ',').'</span>
+					<input type="hidden" class="form-control" name="subtotal[]" id="subtotal'.$reg->producto_id.'" value="'.number_format($reg->precioVenta*$reg->cantidad, 2, '.', '').'">
 				</td>
 				<script>
 					setTimeout(function(){
@@ -308,16 +308,16 @@ switch ($_GET["op"]){
 		$rspta=$pedidos->listar();
 		//Vamos a declarar un array
 		$data= Array();
-
+//15406
 		while ($reg=$rspta->fetch_object()){
 			$botonMostrar = ($reg->tipo_pedido=='worpress')? '<button type="button" class="btn btn-dark btn-sm" title="Mostrar Pedido" href="#" onclick="mostrar('.$reg->pedidoID.')"><i class="fas fa-fw fa-pencil-alt"></i></button>' : '<button type="button" class="btn btn-dark btn-sm" title="Mostrar Pedido" href="#" onclick="mostrar_pedido('.$reg->pedidoID.')"><i class="fas fa-fw fa-pencil-alt"></i></button>';
 			$pedidoWordpress = ($reg->tipo_pedido=='worpress')? '1' : '0';
-			$botonFacturar = (isset($reg->facturaID) && empty($reg->folioFiscal))? ' <button type="button" class="btn btn-success btn-sm" title="Editar Factura" href="#" onclick="edita_factura('.$reg->facturaID.','.$reg->pedidoID.')"><i class="fas fa-fw fa-pencil-alt"></i></button>' : ((isset($reg->facturaID) && isset($reg->folioFiscal))? ' <button type="button" class="btn btn-success btn-sm" title="Ver Factura" href="#" onclick="ver_factura('.$reg->facturaID.','.$reg->pedidoID.')"><i class="fas fa-fw fa-eye"></i></button>' : ' <button type="button" class="btn btn-primary btn-sm" title="Facturar Pedido" href="#" onclick="facturar('.$reg->pedidoID.','.$pedidoWordpress.')"><i class="fas fa-fw fa-file-invoice-dollar"></i></button>');
-			$botonTimbrar = (isset($reg->facturaID) && empty($reg->folioFiscal))? ' <button type="button" class="btn btn-info btn-sm" title="Facturar Pedido" href="#" onclick="timbra('.$reg->facturaID.')"><i class="fas fa-fw fa-cog"></i></button>' : ' <button type="button" class="btn btn-muted btn-sm disabled" title="Timbrar Factura" href="#"><i class="fas fa-fw fa-cog"></i></button>';
+			$botonFacturar = (isset($reg->facturaID) && empty($reg->folioFiscal))? ' <button type="button" class="btn btn-success btn-sm" title="Editar Factura" href="#" onclick="edita_factura('.$reg->pedidoID.','.$reg->facturaID.','.$pedidoWordpress.')"><i class="fas fa-fw fa-pencil-alt"></i></button>' : ((isset($reg->facturaID) && isset($reg->folioFiscal))? ' <button type="button" class="btn btn-success btn-sm" title="Ver Factura" href="#" onclick="ver_factura('.$reg->facturaID.','.$reg->pedidoID.')"><i class="fas fa-fw fa-eye"></i></button>' : ' <button type="button" class="btn btn-primary btn-sm" title="Facturar Pedido" href="#" onclick="facturar('.$reg->pedidoID.','.$pedidoWordpress.')"><i class="fas fa-fw fa-file-invoice-dollar"></i></button>');
+			$botonTimbrar = (isset($reg->facturaID) && $reg->facturaID!='0' && empty($reg->folioFiscal))? ' <button type="button" class="btn btn-info btn-sm" title="Timbrar Pedido" href="#" onclick="timbra('.$reg->facturaID.')"><i class="fas fa-fw fa-cog"></i></button>' : ((isset($reg->facturaID) && isset($reg->folioFiscal) && $reg->status_factura=='Timbrada')? ' <button type="button" class="btn btn-danger btn-sm" title="Cancelar Factura" href="#" onclick="modalCancelaFactura('.$reg->facturaID.')"><i class="fa-solid fa-circle-xmark"></i></button>' : ' <button type="button" class="btn btn-muted btn-sm disabled" title="Timbrar Factura" href="#"><i class="fas fa-fw fa-cog"></i></button>');
 			$linkMostrar = '<a class="link-underline-primary" title="Mostrar Pedido" onclick="mostrar('.$reg->pedidoID.')">'.$reg->pedidoID.'</a>';
 			$statusLabel = ($reg->estado=='wc-pending') ? '<span class="badge rounded-pill text-bg-secondary">Pendiente</span>' :  ( ($reg->estado=='wc-processing') ? '<span class="badge rounded-pill text-bg-info">En Proceso</span>' : ( ($reg->estado=='wc-completed') ? '<span class="badge rounded-pill text-bg-success">Completado</span>' : ( ($reg->estado=='wc-cancelled') ? '<span class="badge rounded-pill text-bg-danger">Cancelado</span>' : '<span class="badge rounded-pill text-bg-secondary">'.htmlspecialchars($reg->estado).'</span>')));
-			$pdf = (isset($reg->folioFiscal))? '<a href="../files/facturas/'.$reg->nombrePDF.'.pdf" target="_blank"><i class="fas fa-file-pdf text-danger" title="Descargar PDF"></i></a>' : '<i class="fas fa-file-pdf text-muted" title="Descargar PDF"></i>';
-			$xml = (isset($reg->folioFiscal))? ' <a href="../files/facturas/'.$reg->nombreXML.'" target="_blank"><i class="fas fa-file-code text-success" title="Descargar XML"></i></a>' : ' <i class="fas fa-file-code text-muted" title="Descargar XML"></i>';
+			$pdf = (isset($reg->folioFiscal))? '<a href="'.$reg->nombrePDF.'" target="_blank"><i class="fas fa-file-pdf text-danger" title="Descargar PDF"></i></a>' : '<i class="fas fa-file-pdf text-muted" title="Descargar PDF"></i>';
+			$xml = (isset($reg->folioFiscal))? ' <a href="'.$reg->nombreXML.'" target="_blank"><i class="fas fa-file-code text-success" title="Descargar XML"></i></a>' : ' <i class="fas fa-file-code text-muted" title="Descargar XML"></i>';
 			$data[]=array(
 				"0"=>$linkMostrar,
 				"1"=>date("Y-m-d", strtotime($reg->fecha)),
@@ -347,7 +347,7 @@ switch ($_GET["op"]){
 				"0"=>$reg->nombreProducto.'<br><small><strong>SKU:</strong> '.$reg->sku.'</small>',
 				"1"=>$reg->variante,
 				"2"=>$imagen,
-				"3"=>'$'.number_format($reg->precioVenta, 2, '.', ','),
+				"3"=>(isset($reg->precioVenta))? '$'.number_format($reg->precioVenta, 2, '.', ',') : 0,
 				"4"=>'<button type="button" class="btn btn-warning btn-sm" onclick="agregarDetalle('.$reg->productoID.','.$reg->variante_id.',\''.$reg->nombreProducto.'\',\''.$reg->variante.'\',\''.$reg->imagen.'\','.$reg->precioVenta.')"><i class="fas fa-plus"></i></button>',
 			);
 		}

@@ -145,6 +145,60 @@ if ($_SESSION['pedidosver']==1){
 </div><!-- /.container-fluid -->
 <!--Fin-Contenido-->
 
+<!-- Modal Cancela Factura -->
+<div class="modal fade" id="cancelaFactura" tabindex="-1" role="dialog" aria-labelledby="cancelaFactura"
+	aria-hidden="true">
+	<div class="modal-dialog modal-xl">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h4 class="modal-title">Cancelar Factura <strong id="facturaCancela"> </strong></h4>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+			</div>
+			<div class="modal-body">
+				<div class="row">
+					<div class="form-group col-lg-6 col-md6 col-sm-12 col-xs-12">
+						<label>Motivo de Cancelación</label>
+						<div class="form-check">
+							<label style="font-weight: normal!important;">
+								<input class="form-check-input" type="radio" name="motivo" id="motivo01" value="01"
+									onclick="cambiaValorRadio(this.value)" checked>
+								01 Comprobante emitido con errores con relación.
+							</label>
+							<label style="font-weight: normal!important;">
+								<input class="form-check-input" type="radio" name="motivo" id="motivo02" value="02"
+									onclick="cambiaValorRadio(this.value)">
+								02 Comprobante emitido con errores sin relación.
+							</label>
+							<label style="font-weight: normal!important;">
+								<input class="form-check-input" type="radio" name="motivo" id="motivo03" value="03"
+									onclick="cambiaValorRadio(this.value)">
+								03 No se llevó a cabo la operación.
+							</label>
+							<label style="font-weight: normal!important;">
+								<input class="form-check-input" disabled type="radio" name="motivo" id="motivo04"
+									value="04" onclick="cambiaValorRadio(this.value)">
+								04 Operación nominativa relacionada en la factura global.
+							</label>
+						</div>
+					</div>
+					<div class="form-group col-lg-6 col-md6 col-sm-12 col-xs-12">
+						<label>Factura Relacionada</label>
+						<input type="hidden" name="facturaID_cancela" id="facturaID_cancela">
+						<select id="folioSustitucion" name="folioSustitucion" class="form-control selectpicker"
+							data-live-search="true" title="Selecciona la Factura Relacionada"></select>
+					</div>
+				</div>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-outline-dark" data-bs-dismiss="modal">Close</button>
+				<button class="btn btn-danger" type="button" id="btnCancelarFactura" onclick="cancelar_factura()"><i
+						class="fa-solid fa-xmark espaciado-icn"></i> Cancelar Factura</button>
+			</div>
+		</div>
+	</div>
+</div>
+<!-- Fin modal Cancela Factura -->
+
 <!-- Modal Productos del Pedido -->
 <div class="modal fade" id="modalProductos" tabindex="-1" role="dialog" aria-labelledby="modalProductos"
 	aria-hidden="true">
@@ -248,17 +302,17 @@ if ($_SESSION['pedidosver']==1){
 						</div>
 						<div class="form-group col-lg-3 col-md-3 col-sm-12 mb-3">
 							<label><text style="color:red;">*</text>Impuesto:</label><br />
-							<select id="impuesto" name="impuesto" class="form-control selectpicker" required>
+							<select id="iva_muestra" class="form-control selectpicker" required>
 								<option value="002" selected>IVA</option>
-								<option value="001" disabled>ISR</option>
-								<option value="003" disabled>IEPS</option>
+								<option value="001">IVA 0%</option>
 							</select>
 						</div>
+						<input type="hidden" id="impuesto" name="impuesto">
 						<div class="form-group col-lg-3 col-md-3 col-sm-12 mb-3">
 							<label><text style="color:red;">*</text>Método de Pago:</label>
 							<select id="metodoPago" name="metodoPago" class="form-control selectpicker"
 								title="Selecciona el Método de Pago" required>
-								<option value="PUE">Pago en una sola exhibición</option>
+								<option value="PUE" selected>Pago en una sola exhibición</option>
 								<option value="PPD">Pago en parcialidades o diferido</option>
 							</select>
 						</div>
@@ -395,7 +449,7 @@ if ($_SESSION['pedidosver']==1){
 								title="Forma de Pago" required>
 								<option value="01">Efectivo</option>
 								<option value="02">Cheque nominativo</option>
-								<option value="03">Transferencia electrónica de fondos</option>
+								<option value="03" selected>Transferencia electrónica de fondos</option>
 								<option value="06">Dinero electrónico</option>
 								<option value="30">Aplicación de anticipos</option>
 								<option value="99">Por definir</option>
@@ -430,8 +484,8 @@ if ($_SESSION['pedidosver']==1){
 							<input type="text" class="form-control" id="cp" name="cp">
 						</div>
 						<div class="form-group col-lg-3 col-md-3 col-sm-12 mb-3">
-							<label><span style="color:red;">*</span>Email del Cliente:</label>
-							<input type="text" class="form-control" id="email_cliente" name="email_cliente" required>
+							<label>Email del Cliente:</label>
+							<input type="text" class="form-control" id="email_cliente" name="email_cliente">
 						</div>
 						<div class="form-group col-lg-3 col-md-3 col-sm-12 mb-3">
 							<label>Teléfono del Cliente:</label>

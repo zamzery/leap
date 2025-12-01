@@ -32,7 +32,8 @@ function init() {
 			$( "#modalFacturas" ).on( "hidden.bs.modal", function () {
 			$( "#pedido_id_factura" ).val( "");
 			$( "#facturaID" ).val( "" );
-			$( "#moneda" ).val( "USD" );
+				$( "#moneda" ).val( "MXN" );
+				$( "#moneda" ).selectpicker( 'refresh' );
 			$( "#tipoCambio" ).val( "1" );
 			$( "#clienteID_factura" ).val( "0" );
 			$( "#clienteID_factura" ).selectpicker( 'refresh' );
@@ -54,6 +55,8 @@ function init() {
 			$( "#metodoPago" ).selectpicker('refresh');
 			$( "#formadePago" ).val( "" );
 			$( "#formadePago" ).selectpicker( 'refresh' );
+				$( "#iva_muestra" ).val( '002' );
+				$( "#iva_muestra" ).selectpicker( 'refresh' );
 			$( "#usoCfdi" ).val( "" );
 			$( "#usoCfdi" ).selectpicker( 'refresh' );
 			$( "#comentarios" ).val( "" );
@@ -169,7 +172,8 @@ function guardaryeditar_factura( e ) {
 			bootbox.alert( datos );
 			tabla.clear().draw();
 			tabla.ajax.reload();
-			$( "#modalFacturas" ).modal( "hide" );
+			const modalFacturas = bootstrap.Modal.getInstance( document.getElementById( 'modalFacturas' ) );
+			if ( modalFacturas ) modalFacturas.hide();
 			$( "#btnGuardarFactura" ).prop( "disabled", false );
 		},
 		error: function ( xhr, status, error ) {
@@ -217,7 +221,8 @@ function mostrar_pedido( pedidoID ) {
 }
 
 function verModalProductos() {
-	$( "#modalProductos" ).modal( "show" );
+	const modalProductos = new bootstrap.Modal( document.getElementById( 'modalProductos' ) );
+	modalProductos.show();
 }
 
 function ver_productos() {
@@ -250,7 +255,7 @@ function facturar( pedidoID, tipo ) {
 	$.post( "../ajax/pedido.php?op=obtener_datos_factura", {pedidoID: pedidoID, tipo: tipo}, function ( data, statusUsuario ) {
 		data = JSON.parse( data );
 		obtenerTipoCambio( 'MXN' ); //producción: obtenerTipoCambio( data.moneda );
-		$( "#pedido_id_factura" ).val( data.pedidoID );
+		$( "#pedido_id_factura" ).val( pedidoID );
 		$( "#facturaID" ).val( data.facturaID );
 		let moneda = data.moneda ? data.moneda : 'USD';
 		$( "#moneda" ).val( moneda );
@@ -270,6 +275,13 @@ function facturar( pedidoID, tipo ) {
 		$( "#razonSocial" ).val( data.nombreCliente );
 		let rfcCliente = data.rfcCliente ? data.rfcCliente : 'XEXX010101000';
 		$( "#rfcCliente" ).val( rfcCliente );
+		if ( rfcCliente == 'XEXX010101000' ) {
+			$( "#iva_muestra" ).val( '001' );
+			$( "#iva_muestra" ).selectpicker( 'refresh' );
+		} else {
+			$( "#iva_muestra" ).val( '002' );
+			$( "#iva_muestra" ).selectpicker( 'refresh' );
+		}
 		let regimenFiscal = data.regimenFiscal ? data.regimenFiscal : '626';
 		$( "#regimenFiscal" ).val( regimenFiscal );
 		$( "#regimenFiscal" ).selectpicker( 'refresh' );
@@ -281,12 +293,14 @@ function facturar( pedidoID, tipo ) {
 		$( "#formadePago" ).selectpicker( 'refresh' );
 		let usoCfdi = data.usoCfdi ? data.usoCfdi : 'S01';
 		$( "#usoCfdi" ).val( usoCfdi );
+		$( "#usoCfdi" ).selectpicker( 'refresh' );
 		$( "#comentarios" ).val( data.comentarios );
 	});
 	$.post( "../ajax/pedido.php?op=mostrarDetallesFactura", {pedidoID: pedidoID, tipo: tipo}, function ( data, statusUsuario ) {
 		$("#detallesFactura").html(data);
 	});
-	$( "#modalFacturas" ).modal( "show" );
+	const modalFacturas = new bootstrap.Modal( document.getElementById( 'modalFacturas' ) );
+	modalFacturas.show();
 }
 
 function ver_factura( facturaID, pedidoID ) {
@@ -312,6 +326,13 @@ function ver_factura( facturaID, pedidoID ) {
 		$( "#razonSocial" ).val( data.nombreCliente );
 		let rfcCliente = data.rfcCliente ? data.rfcCliente : 'XEXX010101000';
 		$( "#rfcCliente" ).val( rfcCliente );
+		if ( rfcCliente == 'XEXX010101000' ) {
+			$( "#iva_muestra" ).val( '001' );
+			$( "#iva_muestra" ).selectpicker( 'refresh' );
+		} else {
+			$( "#iva_muestra" ).val( '002' );
+			$( "#iva_muestra" ).selectpicker( 'refresh' );
+		}
 		let regimenFiscal = data.regimenFiscal ? data.regimenFiscal : '626';
 		$( "#regimenFiscal" ).val( regimenFiscal );
 		$( "#regimenFiscal" ).selectpicker( 'refresh' );
@@ -329,15 +350,17 @@ function ver_factura( facturaID, pedidoID ) {
 		$("#detallesFactura").html(data);
 	});
 	$("#btnGuardarFactura").prop( "disabled", true );
-	$( "#modalFacturas" ).modal( "show" );
+	const modalFacturas = new bootstrap.Modal( document.getElementById( 'modalFacturas' ) );
+	modalFacturas.show();
 }
 
-function edita_factura( facturaID, pedidoID ) {
-	$.post( "../ajax/pedido.php?op=obtener_datos_factura", {facturaID: facturaID, pedidoID: pedidoID}, function ( data, statusUsuario ) {
+function edita_factura( pedidoID, facturaID, tipo ) {
+	$.post( "../ajax/pedido.php?op=obtener_datos_factura", {tipo: tipo, pedidoID: pedidoID, facturaID: facturaID}, function ( data, statusUsuario ) {
 		data = JSON.parse( data );
 		$( "#pedido_id_factura" ).val( pedidoID );
-		$( "#facturaID" ).val( data.facturaID );
-		$( "#moneda" ).val( data.moneda );
+		$( "#facturaID" ).val( facturaID );
+		let moneda = data.moneda ? data.moneda : 'USD';
+		$( "#moneda" ).val( moneda );
 		$( "#moneda" ).selectpicker( 'refresh' );
 		$( "#tipoCambio" ).val( data.tipoCambio );
 		$( "#clienteID_factura" ).val( data.clienteID );
@@ -355,6 +378,13 @@ function edita_factura( facturaID, pedidoID ) {
 		$( "#razonSocial" ).val( data.nombreCliente );
 		let rfcCliente = data.rfcCliente ? data.rfcCliente : 'XEXX010101000';
 		$( "#rfcCliente" ).val( rfcCliente );
+		if ( rfcCliente == 'XEXX010101000' ) {
+			$( "#iva_muestra" ).val( '001' );
+			$( "#iva_muestra" ).selectpicker( 'refresh' );
+		} else {
+			$( "#iva_muestra" ).val( '002' );
+			$( "#iva_muestra" ).selectpicker( 'refresh' );
+		}
 		let regimenFiscal = data.regimenFiscal ? data.regimenFiscal : '626';
 		$( "#regimenFiscal" ).val( regimenFiscal );
 		$( "#regimenFiscal" ).selectpicker( 'refresh' );
@@ -366,13 +396,15 @@ function edita_factura( facturaID, pedidoID ) {
 		$( "#formadePago" ).selectpicker( 'refresh' );
 		let usoCfdi = data.usoCfdi ? data.usoCfdi : 'S01';
 		$( "#usoCfdi" ).val( usoCfdi );
+		$( "#usoCfdi" ).selectpicker( 'refresh' );
 		$( "#comentarios" ).val( data.comentarios );
 	} );
-	$.post( "../ajax/pedido.php?op=mostrarDetallesFactura", {pedidoID: pedidoID}, function ( data, statusUsuario ) {
+	$.post( "../ajax/pedido.php?op=mostrarDetallesFactura", {pedidoID: pedidoID, tipo: tipo}, function ( data, statusUsuario ) {
 		$( "#detallesFactura" ).html( data );
 	} );
 	$( "#btnGuardarFactura" ).prop( "disabled", false );
-	$( "#modalFacturas" ).modal( "show" );
+	const modalFacturas = new bootstrap.Modal( document.getElementById( 'modalFacturas' ) );
+	modalFacturas.show();
 }
 
 function modificarSubTotales(id) {
@@ -414,7 +446,7 @@ async function obtenerTipoCambio(moneda) {
 				throw new Error( 'Error al obtener el tipo de cambio' );
 			} else {
 				let tipo_cambio = parseFloat(data.bmx.series[0].datos[0].dato);
-				$( "#tipoCambio" ).val( tipo_cambio.toFixed(2) );
+				$( "#tipoCambio" ).val( tipo_cambio.toFixed( 4 ) );
 			}
 		} catch ( error ) {
 			console.error( error );
@@ -430,20 +462,76 @@ function timbra( facturaID ) {
 				closeButton: false
 			} );
 			$.post( "../ajax/factura.php?op=timbra", {facturaID: facturaID}, function ( data, status ) {
-				dialog.modal( 'hide' );
+				bootstrap.Modal.getInstance( dialog ).hide();
 				bootbox.alert( data );
 				tabla.clear().draw();
 				tabla.ajax.reload();
 			} ).fail( function () {
-				dialog.modal( 'hide' );
+				bootstrap.Modal.getInstance( dialog ).hide();
 				bootbox.alert( 'No se ha podido timbrar la factura' );
 			} ).done( function () {
-				dialog.modal( 'hide' );
+				bootstrap.Modal.getInstance( dialog ).hide();
 			} );
-			dialog.modal( 'hide' );
+			setTimeout( function () {
+				bootstrap.Modal.getInstance( dialog ).hide();
+			}, 8000 );
 		}
 	} );
 }
+
+function modalCancelaFactura( facturaID, cliente_id ) {
+	$( '#facturaID_cancela' ).val( facturaID );
+	const cancelaFacturaModal = new bootstrap.Modal( document.getElementById( 'cancelaFactura' ) );
+	cancelaFacturaModal.show();
+	$.post( "../ajax/factura.php?op=obtener_facturas_cliente", {cliente_id: cliente_id}, function ( e ) {
+		$( "#folioSustitucion" ).html( e );
+		$( "#folioSustitucion" ).selectpicker( 'refresh' );
+	} );
+	document.getElementById( 'cancelaFactura' ).addEventListener( 'hidden.bs.modal', function () {
+		$( '#facturaID_cancela' ).val( '' );
+		document.getElementById( "motivo01" ).checked = true;
+		document.getElementById( "folioSustitucion" ).disabled = false;
+		$( "#folioSustitucion" ).val( "" );
+		$( "#folioSustitucion" ).selectpicker( 'refresh' );
+	}, {once: true} );
+}
+
+function cancelar_factura() {
+	let facturaID = document.getElementById( "facturaID_cancela" ).value;
+	let folioSustitucion = document.getElementById( "folioSustitucion" ).value;
+	var facturaIDRelacionada = $( "#folioSustitucion" ).children( 'option:selected' ).data( 'folio' );
+	let motivo = $( "input[type=radio][name=motivo]:checked" ).val();
+
+	if ( ( motivo == '01' || motivo == '04' ) && folioSustitucion == '' ) {
+		bootbox.alert( "Selecciona una <strong>Factura Relacionada</strong>" );
+	} else {
+		var dialog = bootbox.dialog( {
+			message: '<p class="text-center"><h4><i class="fa fa-cog fa-spin fa-fw"></i> Por favor espera mientras se cancela la factura...</h4></p>',
+			closeButton: false
+		} );
+		$.post( "../ajax/factura.php?op=cancela_factura", {facturaID: facturaID, facturaIDRelacionada: facturaIDRelacionada, folioSustitucion: folioSustitucion, motivo: motivo}, function ( e ) {
+			bootbox.alert( e );
+			bootstrap.Modal.getInstance( dialog ).hide();
+			//var archivocancelado = "../facturar/archs_cfdi/cancelaciones/Factura - " + facturaID + " - CANCELADA.pdf";
+			//window.open( archivocancelado );
+			tabla.clear().draw();
+			tabla.ajax.reload();
+		} );
+	}
+}
+
+function cambiaValorRadio( nuevoValor ) {
+	if ( nuevoValor == '02' || nuevoValor == '03' ) {
+		document.getElementById( "folioSustitucion" ).disabled = true;
+		$( "#folioSustitucion" ).val( "" );
+		$( "#folioSustitucion" ).selectpicker( 'refresh' );
+	} else {
+		document.getElementById( "folioSustitucion" ).disabled = false;
+		$( "#folioSustitucion" ).val( "" );
+		$( "#folioSustitucion" ).selectpicker( 'refresh' );
+	}
+}
+
 
 function agregarDetalle( productoID, variante_id, nombreProducto, variante, imagen, precioVenta ) {
 	let imagenCuadro = ( imagen ) ? '<a href="' + imagen + '" data-featherlight="image"><img class="img-thumbnail" style="width:40px;height:auto;" src="' + imagen + '"></a>' : '<img class="img-thumbnail" style="width:40px;height:auto;" src="../public/images/placeholder.jpg">';
@@ -503,7 +591,6 @@ function agregarDetalle( productoID, variante_id, nombreProducto, variante, imag
 		$( '#detalles' ).append( fila );
 		modificarTotales();
 	}
-
 }
 
 init();

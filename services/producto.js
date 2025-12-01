@@ -22,6 +22,7 @@ function init() {
 
 //Función limpiar
 function limpiar() {
+	$( "#id" ).val( "" );
 	$( "#productoID" ).val( "" );
 	$( "#nombre" ).val( "" );
 	$( "#precioVenta" ).val( "" );
@@ -118,6 +119,7 @@ function mostrar( productoID ) {
 	$.post( "../ajax/producto.php?op=mostrar", {productoID: productoID}, function ( data, statusUsuario ) {
 		data = JSON.parse( data );
 		mostrarform( true );
+		$( "#id" ).val( data.id );
 		$( "#productoID" ).val( data.productoID );
 		$( "#nombre" ).val( data.nombre );
 		$( "#precioVenta" ).val( data.precioVenta );

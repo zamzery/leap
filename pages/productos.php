@@ -76,6 +76,7 @@ if ($_SESSION['productosver']==1){
 							</div>
 							<div class="form-group col-lg-8 col-md-8 col-sm-12 mb-3">
 								<label for="nombre"><span style="color:red;">*</span>Nombre:</label>
+								<input type="hidden" name="id" id="id" value="">
 								<input type="hidden" name="productoID" id="productoID" value="">
 								<input type="text" class="form-control" name="nombre" id="nombre"
 									placeholder="Nombre de Producto o Servicio" required>

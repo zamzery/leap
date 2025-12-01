@@ -265,7 +265,7 @@ if ($_SESSION['facturasver']==1){
 								<label>Régimen Fiscal:</label>
 								<select id="regimenFiscal" name="regimenFiscal" class="form-control selectpicker"
 									title="Selecciona el Régimen Fiscal" data-size="5" data-container="body"
-									data-live-search="true" disabled>
+									data-live-search="true" required>
 									<option value="601">601 - Persona Moral</option>
 									<option value="603">603 - Persona Moral con Fines no Lucrativos</option>
 									<option value="605">605 - Asalariados</option>

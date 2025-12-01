@@ -370,19 +370,20 @@ switch ($_GET["op"]){
 			$RFC_Recep 		 		= $reg->rfcCliente; // 9.1 RFC del Receptor
 			$numeroInterior			= ($reg->num_int)? ', Int. '.$reg->num_int : '';
 			$direccion_recep 		= $reg->calle.' No. '.$reg->num_ext.''.$numeroInterior.', '.$reg->colonia.', '.$reg->cp.' '.$reg->poblacion.', '.$reg->edoPais;		 // 9.5 Dirección a mostrar en el PDF como referencia 
-			$receptor_rs 	 		= ($RFC_Recep=='XEXX010101000' || $RFC_Recep=='XAXX010101000')? 'PÚBLICO EN GENERAL' : $reg->razonSocial;		// 9.4 Nombre o razón social
+			$receptor_rs 	 		= ($RFC_Recep=='XEXX010101000' || $RFC_Recep=='XAXX010101000')? decodificar_utf8('PÚBLICO EN GENERAL') : $reg->razonSocial;		// 9.4 Nombre o razón social
 			$descuento 				= floatval($reg->descuento);	// Descuento 
 			$facturaCfdiRelacionada = $reg->facturaCfdiRelacionada;
 			$facturaFolioRelacionada= $reg->facturaFolioRelacionada;
 			$tipoRelacion			= $reg->tipoRelacion;
 			$totalFacturaRelacionada = $reg->totalFacturaRelacionada;
-			$preporcentaje			= $reg->totalFacturaRelacionada / ($reg->subtotal * $reg->tipoCambio) * 100;
+			$preporcentaje			= $reg->descuento / $reg->subtotal * 100;
 			$porcentaje 			= 100 - $preporcentaje;
 			$receptor_domicilioFiscal 	= ($RFC_Recep=='XEXX010101000' || $RFC_Recep=='XAXX010101000')? '44460' : $reg->cp; //Prueba: 44960
 			$receptor_regimenFiscal 	= ($RFC_Recep=='XEXX010101000' || $RFC_Recep=='XAXX010101000')? '616' : $reg->regimenFiscal;
 			$comentarioAdicional	= $reg->comentarioAdicional;
 			$credito				= $reg->credito;
 			$fechaCompromiso		= $reg->fechaCompromiso;
+			$subtotal				= $reg->subtotal;
 		}
 		$rspta ? $respuesta=true : $respuesta=false;
 		$informacionGlobal			= '';
@@ -396,7 +397,11 @@ switch ($_GET["op"]){
 		$impuestosRetenidosIVA		= number_format(0,2,'.','');
 
 		// 5. ARRAYS QUE CONTIENEN LOS ARTICULOS QUE FORMAN LA VENTA /////////////////
-		$rspta2=$facturas->timbra_detallesFactura($facturaID);
+		if($RFC_Recep=='XEXX010101000'){
+			$rspta2=$facturas->timbra_detallesFacturaExtranjero($facturaID);
+		} else {
+			$rspta2=$facturas->timbra_detallesFactura($facturaID);
+		}
 		while ($reg2 = $rspta2->fetch_object()){
 			$Array_ClaveProdServ[] 		= isset($reg2->clave)? $reg2->clave : '25172100'; //Clave del producto o servicio
 			$Array_NoIdentificacion 	= ''; //Clave asignada al artículo o servicio (opcional)
@@ -404,17 +409,17 @@ switch ($_GET["op"]){
 			$Array_ClaveUnidad[] 		= isset($reg2->unidad)? $reg2->unidad : 'H87';
 			$Array_Unidad[] 			= isset($reg2->nombreMedida)? $reg2->nombreMedida : 'Pieza';
 			$Array_Descripcion[] 		= ($reg2->descripcion)? mb_convert_encoding($reg2->descripcion, 'ISO-8859-1', 'UTF-8') : mb_convert_encoding($reg2->nombreProducto, 'ISO-8859-1', 'UTF-8');
-			$Array_ValorUnitario[] 		= number_format($reg2->precioVenta*$reg2->tipoCambio,2,'.','');
-			$Array_Importe[] 			= number_format($reg2->subtotal*$reg2->tipoCambio,2,'.','');
+			$Array_ValorUnitario[] 		= number_format($reg2->precioVenta,2,'.','');
+			$Array_Importe[] 			= number_format($reg2->precioVenta*$reg2->cantidad,2,'.','');
 			//$Array_Descuento = $reg->descuento; 	 //Descuento aplicado al artículo o servicio. Actualmente sin incluirse
 			
 		// 6. ARRAYS QUE CONTIENEN LOS IMPUESTOS TRASLADADOS Y RETENIDOS POR CONCEPTO ///////////
 			// Trasladados
-			$ArrayTraslado_Base[]			= number_format($reg2->subtotal*$reg2->tipoCambio,2,'.','');			//Atributo base para el cálculo del impuesto. No se permiten valores negativos
-			$ArrayTraslado_Impuesto[]		= ($RFC_Recep=='XEXX010101000')? '001' : $reg2->claveIva;			//Atributo requerido para señalar la clave de impuesto trasladado aplicable
+			$ArrayTraslado_Base[]			= number_format($reg2->precioVenta*$reg2->cantidad,2,'.','');			//Atributo base para el cálculo del impuesto. No se permiten valores negativos
+			$ArrayTraslado_Impuesto[]		= ($RFC_Recep=='XEXX010101000')? '002' : $reg2->claveIva;			//Atributo requerido para señalar la clave de impuesto trasladado aplicable
 			$ArrayTraslado_TipoFactor[]		= $reg2->factor;				//Atributo requerido para señalar la clave de factor que se aplica a la base del impuesto
 			$ArrayTraslado_TasaOCuota[] 	= ($RFC_Recep=='XEXX010101000')? '0.000000' : $reg2->tasaCuota;			//Atributo condicional para señalar el valor de la tasa o cuota del impuesto que se traslada
-			$ArrayTraslado_Importe[] 		= ($RFC_Recep=='XEXX010101000')? '0.00' : number_format($reg2->ivaUnitario*$reg2->tipoCambio,2,'.','');		//Atributo condicional para señalar el importe del impuesto trasladado que aplica al concepto. No se permiten valores negativos.
+			$ArrayTraslado_Importe[] 		= ($RFC_Recep=='XEXX010101000')? '0.00' : number_format($reg2->precioVenta*0.16,2,'.','');		//Atributo condicional para señalar el importe del impuesto trasladado que aplica al concepto. No se permiten valores negativos.
 
 		}
 		$rspta2 ? $respuesta=true : $respuesta=false;
@@ -427,11 +432,10 @@ switch ($_GET["op"]){
 		require_once "../facturar/CFDI_generaXML.php";
 		$respuesta = $respuestaServer ? true : false;
 		if($respuestaServer){
-			$NomArchXML=$_POST['NomArchXML'];
 			$NomArchPDF=$_POST['NomArchPDF'];
 			$UUID=$_POST['UUID'];
 
-			$rspta3=$facturas->guardaFactura($facturaID,$NomArchPDF,$NomArchXML,$UUID);
+			$rspta3=$facturas->guardaFacturaPDF($facturaID,$NomArchPDF,$UUID);
 			$rspta3 ? $respuesta=true : $respuesta=false;
 		}
 		echo $respuesta ? "La Factura creada" : "No se pudo crear la factura";
