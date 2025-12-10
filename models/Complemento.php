@@ -73,7 +73,7 @@ Class Complemento {
 	}
 
 	public function listarDetalle($complementoID){
-		$sql="SELECT det.id,det.complemento_id AS complementoID,det.factura_id,det.folioFiscalFac,det.serie,fac.fecha,det.parcialidad,det.saldoAnterior,det.estePago,det.saldoRestante,cli.nombre AS nombreCliente FROM complementoDetalles det INNER JOIN factura fac ON det.factura_id=fac.id INNER JOIN clientes cli ON fac.cliente_id=cli.id WHERE det.complemento_id='$complementoID'";
+		$sql="SELECT det.id,det.complemento_id AS complementoID,det.factura_id,det.folioFiscalFac,det.serie,fac.fecha,det.parcialidad,det.saldoAnterior,det.estePago,det.saldoRestante,cli.razonSocial AS nombreCliente FROM complementoDetalles det INNER JOIN factura fac ON det.factura_id=fac.id LEFT JOIN datos_fiscales cli ON fac.cliente_id=cli.cliente_id WHERE det.complemento_id='$complementoID'";
 		return ejecutarConsulta($sql);
 	}
 
@@ -83,12 +83,12 @@ Class Complemento {
 	}
 
 	public function listar_facturas($cliente_id){
-		$sql="SELECT fac.id AS facturaID,fac.cliente_id,fac.serie,fac.fecha,fac.folioFiscal,det.subtotal,fac.descuento,cli.nombre AS nombreCliente,cli.razonSocial,usr.nombre AS vendedor,fac.status,IFNULL(pago.parcialidad,0) AS parcialidad,pago.saldoAnterior,IFNULL(pago.estePago,0) AS estePago,pago.statusPago FROM factura fac LEFT JOIN clientes cli ON fac.cliente_id=cli.id INNER JOIN (SELECT factura_id,SUM(subtotal) AS subtotal FROM facturaDetalle GROUP BY factura_id) det ON fac.id=det.factura_id INNER JOIN users usr ON fac.user_id=usr.id LEFT JOIN (SELECT IFNULL(MIN(detpag.saldoRestante),'0.00') AS saldoRestante,IFNULL(MAX(detpag.saldoAnterior),'0.00') AS saldoAnterior,SUM(estePago) AS estePago,detpag.factura_id,MAX(detpag.parcialidad) AS parcialidad,pag.statusPago FROM complementoDetalles detpag LEFT JOIN complementos pag ON detpag.complemento_id=pag.id WHERE pag.statusPago!='Cancelado' GROUP BY detpag.factura_id) pago ON fac.id=pago.factura_id WHERE fac.cliente_id='$cliente_id' AND fac.status='Facturado' GROUP BY fac.id";
+		$sql="SELECT fac.id AS facturaID,fac.cliente_id,fac.serie,fac.fecha,fac.folioFiscal,det.subtotal,fac.descuento,cli.razonSocial AS nombreCliente,cli.razonSocial,usr.nombre AS vendedor,fac.status,IFNULL(pago.parcialidad,0) AS parcialidad,pago.saldoAnterior,IFNULL(pago.estePago,0) AS estePago,pago.statusPago FROM factura fac LEFT JOIN datos_fiscales cli ON fac.cliente_id=cli.cliente_id INNER JOIN (SELECT factura_id,SUM(subtotal) AS subtotal FROM facturaDetalle GROUP BY factura_id) det ON fac.id=det.factura_id INNER JOIN users usr ON fac.user_id=usr.id LEFT JOIN (SELECT IFNULL(MIN(detpag.saldoRestante),'0.00') AS saldoRestante,IFNULL(MAX(detpag.saldoAnterior),'0.00') AS saldoAnterior,SUM(estePago) AS estePago,detpag.factura_id,MAX(detpag.parcialidad) AS parcialidad,pag.statusPago FROM complementoDetalles detpag LEFT JOIN complementos pag ON detpag.complemento_id=pag.id WHERE pag.statusPago!='Cancelado' GROUP BY detpag.factura_id) pago ON fac.id=pago.factura_id WHERE fac.cliente_id='$cliente_id' AND fac.status='Facturado' GROUP BY fac.id";
 		return ejecutarConsulta($sql);
 	}
 
 	public function timbra($complementoID){
-		$sql="SELECT pago.id AS complementoID,det.total,pago.banco,pago.numCuenta,fop.codigo AS formadePago,pago.fechaPago,pago.usoCfdi,pago.comentarioAdicional,cli.nombre AS nombreCliente,cli.razonSocial,cli.rfcCliente,cli.calle,cli.num_ext,cli.num_int,cli.colonia,cli.cp,cli.poblacion,cli.edoPais,cli.regimenFiscal FROM complementos pago INNER JOIN (SELECT complemento_id,SUM(estePago) AS total FROM complementoDetalles GROUP BY complemento_id) det ON pago.id=det.complemento_id INNER JOIN clientes cli ON pago.cliente_id=cli.id INNER JOIN metodopagos fop ON pago.formadePago=fop.id WHERE pago.id='$complementoID'";
+		$sql="SELECT pago.id AS complementoID,det.total,pago.banco,pago.numCuenta,fop.codigo AS formadePago,pago.fechaPago,pago.usoCfdi,pago.comentarioAdicional,cli.razonSocial AS nombreCliente,cli.razonSocial,cli.rfcCliente,cli.calle,cli.num_ext,cli.num_int,cli.colonia,cli.cp,cli.poblacion,cli.edoPais,cli.regimenFiscal FROM complementos pago INNER JOIN (SELECT complemento_id,SUM(estePago) AS total FROM complementoDetalles GROUP BY complemento_id) det ON pago.id=det.complemento_id INNER JOIN datos_fiscales cli ON pago.cliente_id=cli.cliente_id INNER JOIN metodopagos fop ON pago.formadePago=fop.id WHERE pago.id='$complementoID'";
 		return ejecutarConsulta($sql);
 	}
 

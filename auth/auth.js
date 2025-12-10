@@ -37,7 +37,7 @@ $( "#loginLeap" ).on( 'submit', function ( e ) {
         var obj = jQuery.parseJSON( data );
         if ( obj ) {
             if ( obj.redireccion == "" ) {
-                $( location ).attr( "href", "../pages/escritorio.php" );
+                $( location ).attr( "href", "../pages/pedidos.php" );
             } else {
                 $( location ).attr( "href", "../pages/" + obj.redireccion + ".php" );
 			}

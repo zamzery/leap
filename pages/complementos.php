@@ -135,12 +135,7 @@ if ($_SESSION['complementosver']==1){
 							<div class="form-group col-lg-4 col-md-4 col-sm-12 mb-3">
 								<label><text style="color:red;">*</text>Uso de CFDI:</label>
 								<select id="usoCfdi" name="usoCfdi" class="form-control selectpicker" required>
-									<option value="D10"> Pagos por servicios educativos (colegiaturas)</option>
-									<option value="G01">Adquisición de mercancías</option>
-									<option value="G03">Gastos en general</option>
-									<option value="S01">Sin Efectos Fiscales</option>
-									<option value="CP01 ">Pagos</option>
-									<option value="P01">Por definir</option>
+									<option value="CP01" selected>Pagos</option>
 								</select>
 							</div>
 							<div class="form-group col-lg-4 col-md-4 col-sm-12 mb-3">
@@ -214,7 +209,7 @@ if ($_SESSION['complementosver']==1){
 <!-- Forma Complemento Pagada -->
 <div class="modal fade" id="modalFacturas" tabindex="-1" role="dialog" aria-labelledby="modalFacturas"
 	aria-hidden="true">
-	<div class="modal-dialog modal-lg">
+	<div class="modal-dialog modal-xl">
 		<div class="modal-content">
 			<div class="modal-header">
 				<h4 class="modal-title">Selecciona la Factura:</h4>

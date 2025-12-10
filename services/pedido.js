@@ -47,7 +47,7 @@ function init() {
 				$( "#cp" ).val( "44460" );
 			$( "#razonSocial" ).val( "" );
 			$( "#rfcCliente" ).val( "" );
-			$( "#regimenFiscal" ).val( "626" );
+				$( "#regimenFiscal" ).val( "616" );
 			$( "#regimenFiscal" ).selectpicker( 'refresh' );
 			$( "#num_cuenta" ).val( "" );
 			$( "#banco" ).val( "" );
@@ -251,16 +251,13 @@ function ver_productos() {
 	$( '#tblProductos' ).css( 'width', '100%' );
 }
 
-function facturar( pedidoID, tipo ) {
+function facturar( pedidoID, tipo, clienteID ) {
 	$.post( "../ajax/pedido.php?op=obtener_datos_factura", {pedidoID: pedidoID, tipo: tipo}, function ( data, statusUsuario ) {
 		data = JSON.parse( data );
+		console.log( clienteID );
 		obtenerTipoCambio( 'MXN' ); //producción: obtenerTipoCambio( data.moneda );
 		$( "#pedido_id_factura" ).val( pedidoID );
-		$( "#facturaID" ).val( data.facturaID );
-		let moneda = data.moneda ? data.moneda : 'USD';
-		$( "#moneda" ).val( moneda );
-		$( "#moneda" ).selectpicker( 'refresh' );
-		$( "#clienteID_factura" ).val( data.clienteID );
+		$( "#clienteID_factura" ).val( clienteID );
 		$( "#clienteID_factura" ).selectpicker( 'refresh' );
 		$( "#telefono" ).val( data.telefono );
 		$( "#calle" ).val( data.calle );
@@ -282,7 +279,7 @@ function facturar( pedidoID, tipo ) {
 			$( "#iva_muestra" ).val( '002' );
 			$( "#iva_muestra" ).selectpicker( 'refresh' );
 		}
-		let regimenFiscal = data.regimenFiscal ? data.regimenFiscal : '626';
+		let regimenFiscal = data.regimenFiscal ? data.regimenFiscal : '616';
 		$( "#regimenFiscal" ).val( regimenFiscal );
 		$( "#regimenFiscal" ).selectpicker( 'refresh' );
 		$( "#num_cuenta" ).val( data.num_cuenta );
@@ -295,6 +292,14 @@ function facturar( pedidoID, tipo ) {
 		$( "#usoCfdi" ).val( usoCfdi );
 		$( "#usoCfdi" ).selectpicker( 'refresh' );
 		$( "#comentarios" ).val( data.comentarios );
+		let moneda = data.moneda ? data.moneda : 'USD';
+		$( "#moneda" ).val( moneda );
+		$( "#moneda" ).selectpicker( 'refresh' );
+		if ( data.facturaID != null && data.facturaID != '' ) {
+			$( "#facturaID" ).val( data.facturaID );
+		} else {
+			$( "#facturaID" ).val( '' );
+		}
 	});
 	$.post( "../ajax/pedido.php?op=mostrarDetallesFactura", {pedidoID: pedidoID, tipo: tipo}, function ( data, statusUsuario ) {
 		$("#detallesFactura").html(data);
@@ -333,7 +338,7 @@ function ver_factura( facturaID, pedidoID ) {
 			$( "#iva_muestra" ).val( '002' );
 			$( "#iva_muestra" ).selectpicker( 'refresh' );
 		}
-		let regimenFiscal = data.regimenFiscal ? data.regimenFiscal : '626';
+		let regimenFiscal = data.regimenFiscal ? data.regimenFiscal : '616';
 		$( "#regimenFiscal" ).val( regimenFiscal );
 		$( "#regimenFiscal" ).selectpicker( 'refresh' );
 		$( "#num_cuenta" ).val( data.num_cuenta );
@@ -385,7 +390,7 @@ function edita_factura( pedidoID, facturaID, tipo ) {
 			$( "#iva_muestra" ).val( '002' );
 			$( "#iva_muestra" ).selectpicker( 'refresh' );
 		}
-		let regimenFiscal = data.regimenFiscal ? data.regimenFiscal : '626';
+		let regimenFiscal = data.regimenFiscal ? data.regimenFiscal : '616';
 		$( "#regimenFiscal" ).val( regimenFiscal );
 		$( "#regimenFiscal" ).selectpicker( 'refresh' );
 		$( "#num_cuenta" ).val( data.num_cuenta );
@@ -424,6 +429,7 @@ function modificarTotales() {
 	for (let i = 0; i < tot.length; i++) {
 		totales += parseFloat( tot[i].value );
 	}
+	console.log( totales );
 	$('#grantotal').html( totales.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'));
 }
 

@@ -25,13 +25,10 @@ function init() {
 		var nocuenta = $( this ).children( 'option:selected' ).data( 'nocuenta' );
 		var banco = $( this ).children( 'option:selected' ).data( 'banco' );
 		var formapago = $( this ).children( 'option:selected' ).data( 'formapago' );
-		var usocfdi = $( this ).children( 'option:selected' ).data( 'usocfdi' );
 		$( '#numCuenta' ).val( nocuenta );
 		$( "#banco" ).val( banco );
 		$( "#formadePago" ).val( formapago );
 		$( '#formadePago' ).selectpicker( 'refresh' );
-		$( "#usoCfdi" ).val( usocfdi );
-		$( '#usoCfdi' ).selectpicker( 'refresh' );
 
 		listar_facturas( cliente_id )
 	} );
@@ -41,12 +38,8 @@ function init() {
 		$( "#formadePago" ).selectpicker( 'refresh' );
 	} );
 
-	var date = new Date(), y = date.getFullYear(), m = date.getMonth();
-	var primerDia = new Date( y, m, 1 );
-
 	$( '#fechaInicio' ).datetimepicker( {
 		format: 'YYYY-MM-DD',
-		defaultDate: moment( primerDia )
 	} );
 
 	$( "#fechaInicio" ).on( 'change.datetimepicker', function ( e ) {
@@ -114,8 +107,6 @@ function limpiar() {
 	$( "#numCuenta" ).val( "" );
 	$( "#formadePago" ).val( "" );
 	$( '#formadePago' ).selectpicker( 'refresh' );
-	$( "#usoCfdi" ).val( "" );
-	$( '#usoCfdi' ).selectpicker( 'refresh' );
 	$( "#cliente_id" ).val( "" );
 	$( '#cliente_id' ).selectpicker( 'refresh' );
 	$( "#fechaPago" ).datetimepicker( 'clear' );
@@ -214,8 +205,6 @@ function mostrar( complementoID ) {
 		$( "#numCuenta" ).val( data.numCuenta );
 		$( "#formadePago" ).val( data.formadePago );
 		$( '#formadePago' ).selectpicker( 'refresh' );
-		$( "#usoCfdi" ).val( data.usoCfdi );
-		$( '#usoCfdi' ).selectpicker( 'refresh' );
 		$( "#comentarioAdicional" ).val( data.comentarioAdicional );
 		$( "#cliente_id" ).val( data.cliente_id );
 		$( "#cliente_id" ).selectpicker( 'refresh' );

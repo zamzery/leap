@@ -47,7 +47,7 @@ switch ($_GET["op"]){
 				"0"=>$linkMostrar.'<br><small><strong>SKU:</strong> '.$reg->sku.'</small>',
 				"1"=>$reg->nombreUnidad.' <small>('.$reg->unidad.')</small>',
 				"2"=>$reg->nombreClave.' <small>('.$reg->clave.')</small>',
-				"3"=>'$'.number_format($reg->precioVenta, 2, '.', ','),
+				"3"=>(isset($reg->precioVenta))? '$'.number_format($reg->precioVenta, 2, '.', ',') : 'Sin Precio',
 				"4"=>$imagen,
 				"5"=>$botonVariante,
 				"6"=>$botonMostrar

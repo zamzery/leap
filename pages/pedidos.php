@@ -426,7 +426,7 @@ if ($_SESSION['pedidosver']==1){
 								<option value="612">612 - Personas Físicas</option>
 								<option value="614">614 - Ingresos por intereses</option>
 								<option value="615">615 - Régimen de los ingresos por obtención de premios</option>
-								<option value="616">616 - Sin obligaciones fiscales</option>
+								<option value="616" selected>616 - Sin obligaciones fiscales</option>
 								<option value="620">620 - Sociedades Cooperativas de Producción que optan por
 									diferir sus ingresos</option>
 								<option value="621">621 - Incorporación Fiscal</option>
@@ -480,7 +480,7 @@ if ($_SESSION['pedidosver']==1){
 							<input type="text" class="form-control" id="edoPais" name="edoPais">
 						</div>
 						<div class="form-group col-lg-3 col-md-3 col-sm-12 mb-3">
-							<label>Código Postal:</label>
+							<label>Código Postal: <small>44460</small></label>
 							<input type="text" class="form-control" id="cp" name="cp">
 						</div>
 						<div class="form-group col-lg-3 col-md-3 col-sm-12 mb-3">

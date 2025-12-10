@@ -90,7 +90,7 @@ Class Cliente {
 	}
 
 	public function select_cliente(){
-		$sql="SELECT a.ID AS clienteID,a.display_name AS nombreCliente,a.user_email AS email_cliente,fisc.razonSocial,fisc.num_cuenta,fisc.formadePago,fisc.banco,fisc.calle,fisc.num_ext,fisc.num_int,fisc.colonia,fisc.poblacion,fisc.edoPais,fisc.cp,fisc.rfcCliente,fisc.regimenFiscal FROM wp_users a LEFT JOIN datos_fiscales fisc ON a.ID=fisc.cliente_id WHERE a.activo='1' AND a.user_login!='1' AND a.user_login!='11' GROUP BY a.ID ORDER BY a.display_name ASC";
+		$sql="SELECT a.ID AS clienteID,a.display_name AS nombreCliente,a.user_email AS email_cliente,fisc.razonSocial,fisc.num_cuenta,fisc.formadePago,fisc.banco,fisc.calle,fisc.num_ext,fisc.num_int,fisc.colonia,fisc.poblacion,fisc.edoPais,fisc.cp,fisc.rfcCliente,fisc.regimenFiscal FROM wp_users a LEFT JOIN datos_fiscales fisc ON a.ID=fisc.cliente_id WHERE a.activo='1' AND a.user_login!='1' AND a.user_login!='11' AND a.ID!='0' AND a.display_name!='' GROUP BY a.ID ORDER BY a.display_name ASC";
 		return ejecutarConsulta($sql);
 	}
 

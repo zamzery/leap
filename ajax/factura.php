@@ -366,7 +366,7 @@ switch ($_GET["op"]){
 			$LugarExpedicion 		= "44460"; 				// Lugar de expedición (código postal) Prueba: 44960
 			$usoCfdi		 		= $reg->usoCfdi;		// Uso del CFDI que le dará el cliente
 			$moneda 				= $reg->moneda; 		// Moneda
-			$cliente 				= $reg->nombreCliente;
+			$cliente 				= ($RFC_Recep=='XEXX010101000' || $RFC_Recep=='XAXX010101000')? ' - '.$reg->nombreCliente : '';
 			$RFC_Recep 		 		= $reg->rfcCliente; // 9.1 RFC del Receptor
 			$numeroInterior			= ($reg->num_int)? ', Int. '.$reg->num_int : '';
 			$direccion_recep 		= $reg->calle.' No. '.$reg->num_ext.''.$numeroInterior.', '.$reg->colonia.', '.$reg->cp.' '.$reg->poblacion.', '.$reg->edoPais;		 // 9.5 Dirección a mostrar en el PDF como referencia 
