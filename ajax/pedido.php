@@ -318,12 +318,13 @@ switch ($_GET["op"]){
 			$statusLabel = ($reg->estado=='wc-pending') ? '<span class="badge rounded-pill text-bg-secondary">Pendiente</span>' :  ( ($reg->estado=='wc-processing') ? '<span class="badge rounded-pill text-bg-info">En Proceso</span>' : ( ($reg->estado=='wc-completed') ? '<span class="badge rounded-pill text-bg-success">Completado</span>' : ( ($reg->estado=='wc-cancelled') ? '<span class="badge rounded-pill text-bg-danger">Cancelado</span>' : '<span class="badge rounded-pill text-bg-secondary">'.htmlspecialchars($reg->estado).'</span>')));
 			$pdf = (isset($reg->folioFiscal))? '<a href="'.$reg->nombrePDF.'" target="_blank"><i class="fas fa-file-pdf text-danger" title="Descargar PDF"></i></a>' : '<i class="fas fa-file-pdf text-muted" title="Descargar PDF"></i>';
 			$xml = (isset($reg->folioFiscal))? ' <a href="'.$reg->nombreXML.'" target="_blank"><i class="fas fa-file-code text-success" title="Descargar XML"></i></a>' : ' <i class="fas fa-file-code text-muted" title="Descargar XML"></i>';
+			$factura = (isset($reg->facturaID))? '<small>'.$reg->facturaID.'-A / <span class="text-muted">'.$reg->metodoPago.'</span></small>' : '';
 			$data[]=array(
 				"0"=>$linkMostrar,
 				"1"=>date("Y-m-d", strtotime($reg->fecha)),
 				"2"=>$reg->cliente,
 				"3"=>'$'.number_format($reg->total, 2, '.', ','),
-				"4"=>$pdf.' '.$xml,
+				"4"=>$pdf.' '.$xml.'<br>'.$factura,
 				"5"=>$statusLabel,
 				"6"=>$botonMostrar.$botonFacturar.$botonTimbrar
 			);

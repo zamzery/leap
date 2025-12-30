@@ -8,6 +8,7 @@ if (strlen(session_id()) < 1)
 
 	ini_set('display_errors', 1);
 	ini_set('display_startup_errors', 1);
+	error_reporting(E_ALL & ~E_DEPRECATED);
 
 require_once "../models/Complemento.php";
 $pagos=new Complemento();
@@ -35,6 +36,11 @@ $razonSocial=isset($_POST["razonSocial"])? limpiarCadena($_POST["razonSocial"]):
 $folioFiscal=isset($_POST["folioFiscal"])? limpiarCadena($_POST["folioFiscal"]):"";
 $vendedor2=isset($_POST["vendedor2"])? limpiarCadena($_POST["vendedor2"]):"";
 
+//Cancela Complementos
+$folioSustitucion=isset($_POST["folioSustitucion"])? limpiarCadena($_POST["folioSustitucion"]):"";
+$complementoIDRelacionado=isset($_POST["complementoIDRelacionado"])? limpiarCadena($_POST["complementoIDRelacionado"]):"";
+$motivo=isset($_POST["motivo"])? limpiarCadena($_POST["motivo"]):"";
+
 switch ($_GET["op"]){
 	case 'guardaryeditar':
 		if(empty($complementoID)){
@@ -56,7 +62,7 @@ switch ($_GET["op"]){
 			$fact_folio         = $reg->complementoID;               // 4.2 Número de folio
 			$NoFac              = $reg->complementoID.'-P';         // 4.3 Serie de la factura concatenado con el número de folio
 			$NumCtaPago         = $reg->numCuenta;                      // 4.5 Número de cuenta (sólo últimos 4 dígitos, opcional)
-			$LugarExpedicion    = '44960';                              // 4.6 Lugar de expedición (código postal de emisor)
+			$LugarExpedicion    = '44460';                              // 4.6 Lugar de expedición (código postal de emisor)
 			$razonSocial        = $reg->razonSocial;
 			$formaPago          = $reg->formadePago;
 			$formaPagoFac       = $reg->formadePago;
@@ -75,8 +81,8 @@ switch ($_GET["op"]){
 			if (strlen($RFC_Recep)==12){$RFC_Recep = " ".$RFC_Recep; }else{$RFC_Recep = $RFC_Recep;} // 8.2 Al RFC de personas morales se le antecede un espacio en blanco para que su longitud sea de 13 caracteres ya que estos son de longitud 12.
 			$receptor_rfc       = $RFC_Recep;    // 8.3 RFC.
 			// $receptor_rfc       = 'XAXX010101000';
-			$receptor_rs        = $reg->razonSocial; // 8.4 Nombre o razón social
-			$cliente 		  = $reg->nombreCliente; // 8.5 Nombre o razón social
+			$receptor_rs        = decodificar_utf8($reg->razonSocial); // 8.4 Nombre o razón social
+			$cliente 		  	= $reg->nombreCliente; // 8.5 Nombre o razón social
 			$regimenFiscalReceptor  = $reg->regimenFiscal;
 			$domicilioFiscalReceptor = $reg->cp;
 			
@@ -109,21 +115,27 @@ switch ($_GET["op"]){
 		$rspta2=$pagos->timbra_detallesPago($complementoID);
 		while ($reg2 = $rspta2->fetch_object()){
 			/// 6. ARRAYS QUE CONTIENEN LAS RECEPCIONES DE PAGOS ///////////////////////////
-			$ArrayDocRel_IdDocumento[] = ($reg2->folioFiscalFac)? $reg2->folioFiscalFac : $reg2->folioFiscal;          // 6.1 El UUID relacionado al presente pago
-			$ArrayDocRel_Serie[] 			= 'A';                 // 6.2 Número de serie de la factura relacionada
-			$ArrayDocRel_Folio[] 			= $reg2->factura_id;   // 6.3 Número de folio de la factura relacionada
-			$ArrayDocRel_MonedaDR[] 		= 'MXN';                        // 6.4 Moneda en la que se efectúa el pago, será la misma que la de la factura
-			$ArrayDocRel_MetodoDePagoDR[] 	= $reg2->metodoPago;            // 6.5 Método de pago de la factura
-			$ArrayDocRel_NumParcialidad[] 	= $reg2->parcialidad;           // 6.6 Número de pago actual
-			$ArrayDocRel_ImpSaldoAnt[] 		= number_format($reg2->saldoAnterior,2,'.','');         // 6.7 Saldo anterior al pago
-			$ArrayDocRel_ImpPagado[] 		= number_format($reg2->estePago,2,'.','');              // 6.8 Importe pagado que ampara ésta factura
-			$ArrayDocRel_ImpMonto[]			= number_format($reg2->estePago*1.16,2,'.','');
-			$ArrayDocRel_ImpSaldoInsoluto[]	= number_format($reg2->saldoRestante*1.16,2,'.','');	// 6.9 Importe insoluto o pendiente
-			$ArrayDocRel_Fecha[] 			= $reg2->fechaFactura;	// 6.10 fecha de factura
-			$ArrayDocRel_IvaImpPagado[]		= number_format($reg2->estePago*0.16,2,'.','');
-			$MontoTotalPagos				+= number_format($reg2->estePago*1.16,2,'.','');
-			$TotalTrasladosBaseIVA16		+= number_format($reg2->estePago,2,'.','');
-			$MontoTotalIVA					+= number_format($reg2->estePago*0.16,2,'.','');
+			$ArrayDocRel_IdDocumento[] 			= ($reg2->folioFiscalFac)? $reg2->folioFiscalFac : $reg2->folioFiscal; // 6.1 El UUID relacionado al presente pago
+			$ArrayDocRel_Serie[] 				= $reg2->serie;                 // 6.2 Número de serie de la factura relacionada
+			$ArrayDocRel_Folio[] 				= $reg2->facturaID;   			// 6.3 Número de folio de la factura relacionada
+			$ArrayDocRel_MonedaDR[] 			= $reg2->moneda;                // 6.4 Moneda en la que se efectúa el pago, será la misma que la de la factura
+			$ArrayDocRel_TipoCambioP[] 			= $reg2->tipoCambio;            // 6.5 Tipo de cambio de la factura
+			$monedaPago         				= $reg2->moneda;
+			$regimenFiscalRec         			= $reg2->regimenFiscal;
+			$TipoCambioP						= $reg2->tipoCambio;
+			$ArrayDocRel_MetodoDePagoDR[] 		= $reg2->metodoPago;            // 6.6 Método de pago de la factura
+			$ArrayDocRel_NumParcialidad[] 		= $reg2->parcialidad;           // 6.7 Número de pago actual
+			$ArrayDocRel_ImpSaldoAnt[] 			= ($regimenFiscalRec=='616')? round($reg2->saldoAnterior*$TipoCambioP,2) : ($reg2->saldoAnterior*$TipoCambioP)*1.16;         // 6.8 Saldo anterior al pago
+			$estePago							= ($regimenFiscalRec=='616')? round(($reg2->estePago*$TipoCambioP)*1.16, 2) : round(($reg2->estePago*$TipoCambioP), 2);
+			$saldoRestante						= round($reg2->saldoRestante*$TipoCambioP, 2);
+			$ArrayDocRel_ImpPagado[] 			= ($estePago);              // 6.9 Importe pagado que ampara ésta factura
+			$ArrayDocRel_ImpMonto[]				= ($regimenFiscalRec!='616')? ($estePago)*1.16 : $estePago;
+			$ArrayDocRel_ImpSaldoInsoluto[]		= ($regimenFiscalRec!='616')? ($saldoRestante)*1.16 : $saldoRestante;
+			$ArrayDocRel_Fecha[] 				= $reg2->fechaFactura;			// 6.11 fecha de factura
+			$ArrayDocRel_IvaImpPagado[]			= ($regimenFiscalRec!='616')? round(($estePago)*0.16, 2) : round(($estePago), 2);
+			$MontoTotalPagos					+= ($regimenFiscalRec!='616')? ($estePago)*1.16 : ($estePago);
+			$TotalTrasladosBaseIVA16			+= ($estePago);
+			$MontoTotalIVA						+= ($regimenFiscalRec!='616')? round(($estePago)*0.16, 2) : round(($estePago), 2);
 		}
 		$rspta2 ? $respuesta : $respuesta = false;
 
@@ -132,8 +144,7 @@ switch ($_GET["op"]){
 			$NomArchXML=$_POST['NomArchXML'];
 			$NomArchPDF=$_POST['NomArchPDF'];
 			$UUID=$_POST['UUID'];
-			$guardapago=new Complemento();
-			$rspta3=$guardapago->guardaArchivoPago($complementoID,$NomArchPDF,$NomArchXML,$UUID);
+			$rspta3=$pagos->guardaArchivoPago($complementoID,$NomArchPDF,$NomArchXML,$UUID);
 			$rspta3 ? $respuesta : $respuesta = false;
 		} else {
 			$respuesta = false;
@@ -147,9 +158,35 @@ switch ($_GET["op"]){
 		echo json_encode($rspta);
 	break;
 
+	case 'obtener_complementos_cliente':
+		$rspta = $pagos->obtener_complementos_cliente($cliente_id);
+		while ($reg = $rspta->fetch_object()){
+			$total = number_format(floatval($reg->subtotal),2,'.',',');
+			echo '<option data-total="'.$total.'" data-foliofiscal="'.$reg->folioFiscal.'" data-folio="'.$reg->complementoID.' '.$reg->serie.'" value="'.$reg->folioFiscal.'" data-subtext="'.$reg->razonSocial.'">'.$reg->complementoID.'-'.$reg->serie.' | $'.$total.' | '.$reg->nombreCliente.' </option>';
+		}
+	break;
+
 	case 'cancelar':
-		$rspta=$pagos->cancelar_pago($complementoID);
-		echo $rspta ? "Pago Cancelado" : "El pago no se pudo cancelar";
+		// 4. DATOS GENERALES DE LA FACTURA //////////////////////////////////////////////
+		$respuesta = false;
+		$rspta=$pagos->cancela_pago($complementoID);
+		while ($reg = $rspta->fetch_object()){
+			$fact_folio			= $reg->complementoID;
+			$NoFac				= $complementoID.' P';
+			$UIIDcancelar		= $reg->folioFiscal;
+			$PDFcancelar 		= $reg->pagoPDF;
+			$XMLcancelar 		= $reg->pagoXML;
+			$cliente			= $reg->nombreCliente;
+			$pago				= 1;
+		}
+		require_once "../facturar/CFDI_cancelarFactura.php";
+		if($respuestaServer==true){
+			$rutaXML=$_POST['rutaXML'];
+			$rutaPDF=$_POST['rutaPDF'];
+			$rspta2=$pagos->guardaPagoCancelado($complementoID,$rutaPDF,$rutaXML,$motivo,$complementoIDRelacionado);
+			$respuesta = $rspta2 ? true : false;
+		}
+		echo $respuestaServer ? "Pago Cancelado" : "El pago no se pudo cancelar";
 	break;
 
 	case 'mostrarEmails':
@@ -274,24 +311,23 @@ switch ($_GET["op"]){
 	break;
 
 	case 'listar_facturas':
-		$cli = $_GET['cli'];
-		$rspta=$pagos->listar_facturas($cli);
+		$rspta=$pagos->listar_facturas();
 		//Vamos a declarar un array
 		$data= Array();
 
 		while ($reg=$rspta->fetch_object()){
 			$factura=$reg->facturaID.'-'.$reg->serie;
-			$total = number_format((floatval($reg->subtotal)-floatval($reg->descuento))*1.16,2,'.','');
+			$total = ($reg->usoCfdi!='S01')? number_format((floatval($reg->subtotal)-floatval($reg->descuento))*1.16,2,'.',''): number_format((floatval($reg->subtotal)-floatval($reg->descuento)),2,'.','');
 			$estePago = number_format($total-floatval($reg->estePago),2,'.','');
 			$data[]=array(
 				"0"=>$factura,
 				"1"=>date("Y-m-d", strtotime($reg->fecha)),
 				"2"=>$reg->nombreCliente.' <small>'.$reg->razonSocial.'</small>',
-				"3"=>'$'.number_format($total,2,'.',','),
+				"3"=>'$'.number_format($total,2,'.',',').'<br><small>('.$reg->moneda.')</small>',
 				"4"=>$reg->parcialidad,
 				"5"=>'$'.number_format($estePago,2,'.',','),
-				"6"=>($reg->status=='Pagada')? '<span class="badge bg-success">Pagada</span>' : (($reg->status=='Parcial')?'<span class="badge bg-yellow">Parcial</span>':'<span class="badge bg-black">Sin Pago</span>'),
-				"7"=>'<button id="factura'.$reg->facturaID.'-A" class="btn btn-warning btn-sm" onclick="agregarDetalle(\''.$reg->facturaID.'\',\''.$reg->fecha.'\',\''.$reg->saldoAnterior.'\',\''.$total.'\',\''.$estePago.'\',\''.$reg->folioFiscal.'\',\''.str_replace('"', "", $reg->nombreCliente).'\',\''.$reg->parcialidad.'\')"><span class="fa fa-plus"></span></button>',
+				"6"=>($reg->status=='Pagado')? '<span class="badge bg-success">Pagada</span>' : (($reg->status=='Parcial')?'<span class="badge bg-yellow">Parcial</span>':'<span class="badge bg-black">Sin Pago</span>'),
+				"7"=>'<button id="factura'.$reg->facturaID.'-A" class="btn btn-warning btn-sm" onclick="agregarDetalle(\''.$reg->facturaID.'\',\''.$reg->fecha.'\',\''.$reg->saldoAnterior.'\',\''.$total.'\',\''.$estePago.'\',\''.$reg->folioFiscal.'\',\''.$reg->cliente_id.'\',\''.str_replace('"', "", $reg->nombreCliente).'\',\''.$reg->parcialidad.'\',\''.$reg->moneda.'\')"><span class="fa fa-plus"></span></button>',
 			);
 		}
 		$results = array(
@@ -315,26 +351,18 @@ switch ($_GET["op"]){
 			}
 			$icono = ($reg->statusPago=='En Espera')? 'fa-solid fa-pencil' : 'fa-solid fa-eye';
 			$botonMostrar = '<button title="Ver Pago" class="btn btn-warning btn-sm" onclick="mostrar('.$reg->complementoID.')"><i class="'.$icono.'"></i></button>';
-			$timbrar = (empty($reg->pagoPDF))? '<li><a class="dropdown-item" href="#" onclick="timbra('.$reg->complementoID.')"><i class="fa-solid fa-gear espaciado-icn"></i> Timbrar Pago</a></li>' : '<li><a class="dropdown-item" style="color:DarkGray;" href="#"><i class="fa-solid fa-gear espaciado-icn"></i> Timbrar Pago</a></li>';
-			$cancelar = (empty($reg->pagoPDF) || $reg->statusPago=='Cancelado' || date("Ym", strtotime($reg->fechaPago)) < date('Ym'))? '<li><a class="dropdown-item" style="color:DarkGray;" href="#"><i class="fa-solid fa-xmark espaciado-icn"></i> Cancelar</a></li>' : '<li><a class="dropdown-item text-danger" href="#" onclick="modalCancelaFactura('.$reg->complementoID.','.$reg->cliente_id.')"><i class="fa-solid fa-xmark espaciado-icn"></i> Cancelar</a></li>';
-			$dropdown = '<div class="btn-group">
-				<button type="button" title="Acciones de Facturación" class="btn btn-primary btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-					<i class="fa-solid fa-screwdriver-wrench"></i>
-				</button>
-				<div class="dropdown-menu dropdown-menu-end shadow-sm">
-					'.$timbrar.'
-					<div class="dropdown-divider"></div>
-					'.$cancelar.'
-				</div>
-			</div>';
+			$botonTimbrar = (empty($reg->pagoPDF))? '<button class="btn btn-primary btn-sm" onclick="timbra('.$reg->complementoID.')"><i class="fa-solid fa-gear"></i></button>' : '<button class="btn btn-muted btn-sm" style="color:DarkGray;" href="#"><i class="fa-solid fa-gear"></i></button>';
+			$botonCancelar = (empty($reg->pagoPDF) || $reg->statusPago=='Cancelado')? '<button class="btn btn-muted btn-sm disabled"><i class="fa-solid fa-xmark"></i></button>' : '<button class="btn btn-danger btn-sm" onclick="modalCancelaComplemento('.$reg->complementoID.',\''.$reg->cliente_id.'\')"><i class="fa-solid fa-xmark"></i></button>';
+			$xml = (empty($reg->folioFiscal) && empty($reg->pagoXML))? ' <i class="fas fa-file-code text-muted" title="Descargar XML"></i>' : ((isset($reg->folioFiscal) && empty($reg->pagoXMLCancelado))? ' <a href="'.$reg->pagoXML.'" target="_blank"><i class="fas fa-file-code text-success" title="Descargar XML"></i></a>' : ' <a href="'.$reg->pagoXMLCancelado.'" target="_blank"><i class="fas fa-file-code text-success" title="Descargar XML"></i></a>');
+			$pdf = (empty($reg->folioFiscal) && empty($reg->pagoPDF))? ' <i class="fas fa-file-pdf text-muted" title="Descargar PDF"></i>' : ((isset($reg->folioFiscal) && empty($reg->pagoPDFCancelado))? ' <a href="'.$reg->pagoPDF.'" target="_blank"><i class="fas fa-file-pdf text-danger" title="Descargar PDF"></i></a>' : ' <a href="'.$reg->pagoPDFCancelado.'" target="_blank"><i class="fas fa-file-pdf text-danger" title="Descargar PDF"></i></a>');
 			$data[]=array(
 				"0"=>$reg->complementoID,
 				"1"=>$reg->facturasRelacionadas,
 				"2"=>date("Y-m-d", strtotime($reg->fechaPago)),
 				"3"=>'$ '.number_format($reg->total,2,'.',','),
-				"4"=>(empty($reg->pagoPDF))?'<img class="img-thumbnail" style="filter: grayscale(100%);opacity: 0.5;" width="30" height="30" src="../public/images/pdf-file.png"> <img class="img-thumbnail" style="filter: grayscale(100%);opacity: 0.5;" width="30" height="30" src="../public/images/xml-file.png">':'<a href="'.$reg->pagoPDF.'" target="_blank"><img class="img-thumbnail" width="30" height="30" src="../public/images/pdf-file.png"></a> <a href="'.$reg->pagoXML.'" download target="_blank"><img class="img-thumbnail" width="30" height="30" src="../public/images/xml-file.png"></a>',
+				"4"=>$pdf.' '.$xml,
 				"5"=>($reg->statusPago=='En Espera')?'<span class="badge bg-black">En Espera</span>':(($reg->statusPago=='Timbrada')?'<span class="badge bg-success">Timbrada</span>':'<span class="badge bg-danger">Cancelada</span>'),
-				"6"=>$botonMostrar.' '.$botonemail.' '.$dropdown,
+				"6"=>$botonMostrar.' '.$botonTimbrar.' '.$botonCancelar,
 			);
 		}
 		$results = array(

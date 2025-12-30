@@ -30,23 +30,23 @@
 					</a>';
 				}
 
-				if ($_SESSION['pagosver']==1 || $_SESSION['gastosver']==1){
-					echo '<div class="sidenav-menu-heading">Pagos Recibidos y Gastos</div>';
-				}
+				// if ($_SESSION['pagosver']==1 || $_SESSION['gastosver']==1){
+				// 	echo '<div class="sidenav-menu-heading">Pagos Recibidos y Gastos</div>';
+				// }
 
-				if ($_SESSION['pagosver']==1){
-					echo '<a class="nav-link" href="../pages/pagos_recibidos.php">
-						<div class="nav-link-icon"><i class="fa-solid fa-dollar-sign"></i></div>
-						Pagos Recibidos
-					</a>';
-				}
+				// if ($_SESSION['pagosver']==1){
+				// 	echo '<a class="nav-link" href="../pages/pagos_recibidos.php">
+				// 		<div class="nav-link-icon"><i class="fa-solid fa-dollar-sign"></i></div>
+				// 		Pagos Recibidos
+				// 	</a>';
+				// }
 
-				if ($_SESSION['gastosver']==1){
-					echo '<a class="nav-link" href="../pages/pagos_efectuados.php">
-						<div class="nav-link-icon"><i class="fa-solid fa-wallet"></i></div>
-						Pagos Efectuados
-					</a>';
-				}
+				// if ($_SESSION['gastosver']==1){
+				// 	echo '<a class="nav-link" href="../pages/pagos_efectuados.php">
+				// 		<div class="nav-link-icon"><i class="fa-solid fa-wallet"></i></div>
+				// 		Pagos Efectuados
+				// 	</a>';
+				// }
 
 				if ($_SESSION['facturasver']==1 || $_SESSION['adminfacturaver']==1){
 					echo '<div class="sidenav-menu-heading">Facturación</div>';

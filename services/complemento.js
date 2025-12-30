@@ -14,8 +14,10 @@ function init() {
 		guardaryeditar( e );
 	} );
 
+	listar_facturas();
+
 	//Cargamos los items al select cliente
-	$.post( "../ajax/cliente.php?op=select_cliente_factura", function ( r ) {
+	$.post( "../ajax/cliente.php?op=select_cliente", function ( r ) {
 		$( "#cliente_id" ).html( r );
 		$( '#cliente_id' ).selectpicker( 'refresh' );
 	} );
@@ -29,8 +31,6 @@ function init() {
 		$( "#banco" ).val( banco );
 		$( "#formadePago" ).val( formapago );
 		$( '#formadePago' ).selectpicker( 'refresh' );
-
-		listar_facturas( cliente_id )
 	} );
 
 	$.post( "../ajax/metodopago.php?op=select_metodopago", function ( r ) {
@@ -195,10 +195,9 @@ function listar() {
 }
 
 function mostrar( complementoID ) {
-	$.post( "../ajax/complemento.php?op=mostrar", {complementoID: complementoID}, function ( data, statusOrden ) {
-		data = JSON.parse( data );
+	$.post( "../ajax/complemento.php?op=mostrar", {complementoID: complementoID}, function ( resp, statusOrden ) {
+		data = JSON.parse( resp );
 		mostrarform( true );
-
 		$( "#complementoID" ).val( data.complementoID );
 		$( "#folioFiscal" ).val( data.folioFiscal );
 		$( "#banco" ).val( data.banco );
@@ -208,8 +207,7 @@ function mostrar( complementoID ) {
 		$( "#comentarioAdicional" ).val( data.comentarioAdicional );
 		$( "#cliente_id" ).val( data.cliente_id );
 		$( "#cliente_id" ).selectpicker( 'refresh' );
-		$( "#cliente_id" ).trigger( 'change' );
-		$( "#fechaPago" ).datetimepicker( 'date', moment( data.fechaPago ).format( 'YYYY-MM-DD' ) );
+		$( "#fechaPago" ).datetimepicker( 'date', moment( data.fechaPago ) );
 		$( "#statusPago" ).val( data.statusPago );
 
 		//Ocultar y mostrar los botones
@@ -226,7 +224,7 @@ function mostrar( complementoID ) {
 	} );
 }
 
-function listar_facturas( cliente_id ) {
+function listar_facturas() {
 	tabla_factura = $( '#tblFacturas' ).dataTable( {
 		"aProcessing": true,//Activamos el procesamiento del datatables
 		"aServerSide": true,//Paginación y filtrado realizados por el servidor
@@ -235,7 +233,7 @@ function listar_facturas( cliente_id ) {
 
 		],
 		"ajax": {
-			url: '../ajax/complemento.php?op=listar_facturas&cli=' + cliente_id,
+			url: '../ajax/complemento.php?op=listar_facturas',
 			type: "get",
 			dataType: "json",
 			error: function ( e ) {
@@ -244,24 +242,18 @@ function listar_facturas( cliente_id ) {
 		},
 
 		"columnDefs": [
-			{"width": "35px", "targets": 0},
 			{"type": "natural", "targets": 0},
-			{"width": "35px", "targets": 1},
-			{"width": "120px", "targets": 2},
-			{"width": "90px", "targets": 5},
-			{"width": "30px", "targets": 6},
-			{"width": "25px", "targets": 7},
-			{"searchable": false, "targets": 7}
+			{"width": "50px", "targets": [ 0, 4, 6, 7 ]},
+			{"width": "100px", "targets": [ 1, 3, 5 ]},
+			{"searchable": false, "targets": 7},
+			{"className": "text-center", "targets": [ 0, 1, 4, 6, 7 ]},
+			{"className": "text-end", "targets": [ 3, 5 ]},
 		],
-		language: {
-			emptyTable: 'Se debe seleccionar un cliente para agregar facturas.'
-		},
 		"bDestroy": true,
 		"iDisplayLength": 10,//Paginación
 		"order": [ 0, "desc" ]//Ordenar (columna,orden)
 	} ).DataTable();
-	$( "#tbldetalles" ).css( "width", "100%" );
-	$( "#tablaVacia" ).hide();
+	$( "#tblFacturas" ).css( "width", "100%" );
 }
 
 function muestraModalFacturas() {
@@ -333,22 +325,66 @@ function retimbrar( complementoID ) {
 	} );
 }
 
-//Función para Cancelar el Pago
-function cancelar( complementoID ) {
-	bootbox.confirm( "¿Quieres de Cancelar el Pago?, <span style='color:red;font-weight:bold;'>¡Esta acción no se puede deshacer!</span>", function ( result ) {
-		if ( result ) {
-			$.post( "../ajax/complemento.php?op=cancelar", {complementoID: complementoID}, function ( e ) {
-				bootbox.alert( e );
-				tabla.clear().draw();
-				tabla.ajax.reload();
-			} );
-		}
+function modalCancelaComplemento( complementoID, cliente_id ) {
+	$( '#complementoID_cancela' ).val( complementoID );
+	$.post( "../ajax/complemento.php?op=obtener_complementos_cliente", {cliente_id: cliente_id}, function ( e ) {
+		$( "#folioSustitucion" ).html( e );
+		$( "#folioSustitucion" ).selectpicker( 'refresh' );
 	} );
+	$( "#cancelaComplemento" ).modal( 'show' );
+	$( '#cancelaComplemento' ).on( 'hidden.bs.modal', function () {
+		$( '#complementoID_cancela' ).val( '' );
+		document.getElementById( "motivo01" ).checked = true;
+		document.getElementById( "folioSustitucion" ).disabled = false;
+		$( "#folioSustitucion" ).val( "" );
+		$( "#folioSustitucion" ).selectpicker( 'refresh' );
+	} );
+}
+
+function cambiaValorRadio( nuevoValor ) {
+	if ( nuevoValor == '02' || nuevoValor == '03' ) {
+		document.getElementById( "folioSustitucion" ).disabled = true;
+		$( "#folioSustitucion" ).val( "" );
+		$( "#folioSustitucion" ).selectpicker( 'refresh' );
+	} else {
+		document.getElementById( "folioSustitucion" ).disabled = false;
+		$( "#folioSustitucion" ).val( "" );
+		$( "#folioSustitucion" ).selectpicker( 'refresh' );
+	}
+}
+
+//Función para Cancelar el Pago
+function cancelar() {
+	let complementoID_cancela = document.getElementById( "complementoID_cancela" ).value;
+	let folioSustitucion = document.getElementById( "folioSustitucion" ).value;
+	var complementoIDRelacionado = $( "#folioSustitucion" ).children( 'option:selected' ).data( 'folio' );
+	let motivo = $( "input[type=radio][name=motivo]:checked" ).val();
+
+	if ( ( motivo == '01' || motivo == '04' ) && folioSustitucion == '' ) {
+		bootbox.alert( "Selecciona una <strong>Complemento Relacionado</strong>" );
+	} else {
+		var dialog = bootbox.dialog( {
+			message: '<p class="text-center"><h4><i class="fa fa-cog fa-spin fa-fw"></i> Por favor espera mientras se cancela la complemento...</h4></p>',
+			closeButton: false
+		} );
+		$.post( "../ajax/complemento.php?op=cancelar", {complementoID: complementoID_cancela, complementoIDRelacionado: complementoIDRelacionado, folioSustitucion: folioSustitucion, motivo: motivo}, function ( e ) {
+			bootbox.alert( e );
+			dialog.modal( 'hide' );
+			tabla.clear().draw();
+			tabla.ajax.reload();
+		} );
+		setTimeout( function () {
+			dialog.modal( 'hide' );
+		}, 10000 );
+	}
 }
 
 var detalles = 0;
 var cont = 0;
-function agregarDetalle( factura, fecha, saldoAnterior, total, saldoRestante, folioFiscal, nombreCliente, parcialidad ) {
+function agregarDetalle( factura, fecha, saldoAnterior, total, saldoRestante, folioFiscal, cliente_id, nombreCliente, parcialidad, moneda ) {
+	console.log( cliente_id );
+	$( "#cliente_id" ).val( cliente_id );
+	$( '#cliente_id' ).selectpicker( 'refresh' );
 	if ( document.getElementsByName( "contador[]" ).length != 0 ) {
 		var contadorprod = document.getElementsByName( "contador[]" );
 		var arrcontadorprod = [];
@@ -391,10 +427,10 @@ function agregarDetalle( factura, fecha, saldoAnterior, total, saldoRestante, fo
 			'<td style="width:100px;"><input class="form-control" type="number" maxlength="2" name="parcialidad[]" id="parcialidad' + cont + '" value="' + parcialidad + '" style="width:100px;"></td>' +
 
 			//Saldo Anterior
-			'<td style="text-align:right;">$ <span id="saldoAnterior' + cont + '">' + saldoAnterior + '</span> <input type="hidden" name="saldoAnterior[]" id="saldoAnteriorInput' + cont + '" value="' + saldoAnterior + '"></td>' +
+			'<td style="text-align:right;"><small>(' + moneda + ')</small> $<span id="saldoAnterior' + cont + '">' + saldoAnterior + '</span> <input type="hidden" name="saldoAnterior[]" id="saldoAnteriorInput' + cont + '" value="' + saldoAnterior + '"></td>' +
 
 			//Este Pago
-			'<td style="width:220px;"><div class="form-group"><div class="input-group date" id="fechaPago" data-target-input="nearest"><div class="input-group-text">$</div><input type="number" class="form-control" name="estePago[]" id="estePago' + cont + '" value="' + total + '" onkeyup="modificarSubtotales()"/></div></div> <input type="hidden" name="estePagoOriginal[]" id="estePagoOriginal' + cont + '" value="' + total + '"></td>' +
+			'<td style="width:220px;"><div class="form-group"><div class="input-group date" id="fechaPago" data-target-input="nearest"><div class="input-group-text">$</div><input type="number" class="form-control" lang="en-US" step=".01" min="0" name="estePago[]" id="estePago' + cont + '" value="' + total + '" onkeyup="modificarSubtotales()"/></div></div> <input type="hidden" name="estePagoOriginal[]" id="estePagoOriginal' + cont + '" value="' + total + '"></td>' +
 
 			//Saldo Restante
 			'<td style="text-align:right;">$ <span id="saldoRestante2' + cont + '">' + saldoRestante + '</span> <input type="hidden" name="saldoRestante[]" id="saldoRestante' + cont + '" value="' + saldoRestante + '"></td>' +
@@ -406,6 +442,31 @@ function agregarDetalle( factura, fecha, saldoAnterior, total, saldoRestante, fo
 		document.getElementById( "factura" + factura + '-A' ).disabled = true;
 	} else {
 		alert( "Error al ingresar el detalle, revisar los datos del artículo" );
+	}
+}
+
+const no_cuenta = () => {
+	let cuenta = document.getElementById( "numCuenta" );
+	//colocar ceros a la izquierda hasta completar 10 digitos
+	while ( cuenta.value.length < 10 ) {
+		cuenta.value = '0' + cuenta.value;
+	}
+}
+
+const no_tarjeta = () => {
+	let tarjeta = document.getElementById( "numCuenta" );
+	//colocar ceros a la izquierda hasta completar 16 digitos
+	while ( tarjeta.value.length < 16 ) {
+		tarjeta.value = '0' + tarjeta.value;
+	}
+}
+
+const no_clabe = () => {
+	//'000000000000000000'
+	let clabe = document.getElementById( "numCuenta" );
+	//colocar ceros a la izquierda hasta completar 18 digitos
+	while ( clabe.value.length < 18 ) {
+		clabe.value = '0' + clabe.value;
 	}
 }
 

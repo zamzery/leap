@@ -123,9 +123,11 @@ if ($_SESSION['complementosver']==1){
 									title="Entidad Bancaria">
 							</div>
 							<div class="form-group col-lg-4 col-md-4 col-sm-12 mb-3">
-								<label>No. de Cuenta: <small>Cuenta 10/Tarjeta 16/CLABE 18</small></label>
+								<label>No. de Cuenta: <small><a href="#" onclick="no_cuenta()">Cuenta 10</a>/<a href="#"
+											onclick="no_tarjeta()">Tarjeta 16</a>/<a href="#" onclick="no_clabe()">CLABE
+											18</a></small></label>
 								<input type="text" class="form-control" name="numCuenta" id="numCuenta" min="10"
-									max="50" title="Número de Cuenta" required>
+									max="18" title="Número de Cuenta" required>
 							</div>
 							<div class="form-group col-lg-4 col-md-4 col-sm-12 mb-3">
 								<label><text style="color:red;">*</text>Forma de Pago:</label>
@@ -226,25 +228,22 @@ if ($_SESSION['complementosver']==1){
 								<th>Fecha</th>
 								<th>Cliente</th>
 								<th>$Total</th>
-								<th>Parcialidad</th>
+								<th>Parci.</th>
 								<th>Restante</th>
 								<th>Status</th>
-								<th>Acciones</th>
+								<th></th>
 							</thead>
 							<tbody>
-								<tr>
-									<td colspan="8" id="tablaVacia">Se debe seleccionar un cliente para agregar
-										facturas.</td>
-								</tr>
 							</tbody>
 							<tfoot>
-								<th>Folio</th>
-								<th>Fact. Rel.</th>
-								<th>Fecha Pago</th>
-								<th>Pago</th>
-								<th>PDF/XML</th>
+								<th>Factura</th>
+								<th>Fecha</th>
+								<th>Cliente</th>
+								<th>$Total</th>
+								<th>Parci.</th>
+								<th>Restante</th>
 								<th>Status</th>
-								<th>Acciones</th>
+								<th></th>
 							</tfoot>
 						</table>
 					</div>
@@ -294,7 +293,7 @@ if ($_SESSION['complementosver']==1){
 	<div class="modal-dialog modal-xl">
 		<div class="modal-content">
 			<div class="modal-header">
-				<h4 class="modal-title">Cancelar Complemento <strong id="facturaCancela"> </strong></h4>
+				<h4 class="modal-title">Cancelar Complemento <strong id="complementoCancela"> </strong></h4>
 				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
 			</div>
 			<div class="modal-body">
@@ -326,7 +325,7 @@ if ($_SESSION['complementosver']==1){
 					</div>
 					<div class="form-group col-lg-6 col-md6 col-sm-12 mb-3">
 						<label>Complemento Relacionada</label>
-						<input type="hidden" name="complementoID_cancela" id="complementoID_cancela">
+						<input type="hidden" name="complementoID" id="complementoID_cancela">
 						<select id="folioSustitucion" name="folioSustitucion" class="form-control selectpicker"
 							data-live-search="true" title="Selecciona la Complemento Relacionada"></select>
 					</div>
@@ -334,7 +333,7 @@ if ($_SESSION['complementosver']==1){
 			</div>
 			<div class="modal-footer">
 				<button type="button" class="btn btn-outline-dark" data-bs-dismiss="modal">Close</button>
-				<button class="btn btn-danger" type="button" id="btnCancelarComplemento" onclick="cancelar_factura()"><i
+				<button class="btn btn-danger" type="button" id="btnCancelarComplemento" onclick="cancelar()"><i
 						class="fa-solid fa-xmark espaciado-icn"></i> Cancelar Complemento</button>
 			</div>
 		</div>

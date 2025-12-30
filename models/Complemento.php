@@ -56,14 +56,19 @@ Class Complemento {
 		return ejecutarConsultaSimpleFila($sql);
 	}
 
-	//Implementamos un método para cancelar el pago
-	public function cancelar_pago($complementoID){
-		$sql="UPDATE complementos SET statusPago='Cancelado' WHERE complementoID='$complementoID'";
+	public function obtener_complementos_cliente($cliente_id){
+		$sql="SELECT pag.id AS complementoID,tot.subtotal,'P' AS serie,pag.folioFiscal,pag.statusPago,IFNULL(a.display_name,cli.razonSocial) AS nombreCliente,cli.razonSocial FROM complementos pag INNER JOIN datos_fiscales cli ON pag.cliente_id=cli.cliente_id LEFT JOIN wp_users a ON a.ID=cli.cliente_id LEFT JOIN (SELECT complemento_id,SUM(estePago) AS subtotal FROM complementoDetalles GROUP BY complemento_id) tot ON pag.id=tot.complemento_id WHERE pag.cliente_id='$cliente_id' AND pag.statusPago!='Cancelado' AND pag.statusPago!='En Espera' GROUP BY pag.id";
 		return ejecutarConsulta($sql);
 	}
 
-	public function retimbrar_pago($complementoID){
-		$sql="UPDATE complementos SET pagoPDF='',pagoXML='', statusPago='En Espera' WHERE complementoID='$complementoID'";
+	//Implementamos un método para cancelar el pago
+	public function cancela_pago($complementoID){
+		$sql="SELECT c.id AS complementoID,c.folioFiscal,c.pagoPDF,c.pagoXML,cli.cliente_id,IFNULL(a.display_name,cli.razonSocial) AS nombreCliente FROM complementos c INNER JOIN datos_fiscales cli ON c.cliente_id=cli.cliente_id LEFT JOIN wp_users a ON a.ID=c.cliente_id WHERE c.id='$complementoID'";
+		return ejecutarConsulta($sql);
+	}
+
+	public function guardaPagoCancelado($complementoID,$rutaPDF,$rutaXML,$motivo,$complementoIDRelacionado){
+		$sql="UPDATE complementos SET statusPago='Cancelado',pagoPDFCancelado='$rutaPDF',pagoXMLCancelado='$rutaXML',folioSustitucion='$complementoIDRelacionado',motivo='$motivo' WHERE id='$complementoID'";
 		return ejecutarConsulta($sql);
 	}
 
@@ -78,12 +83,12 @@ Class Complemento {
 	}
 
 	public function listar(){
-		$sql="SELECT pag.id AS complementoID,pag.fechaPago,pag.folioFiscal,det.total,pag.banco,pag.formadePago,pag.fechaPago,pag.usoCfdi,pag.pagoPDF,pag.pagoXML,pag.statusPago,det.facturasRelacionadas,pag.emailEnviado,pag.cliente_id FROM complementos pag INNER JOIN (SELECT complemento_id,GROUP_CONCAT(DISTINCT factura_id SEPARATOR ', ') AS facturasRelacionadas,SUM(estePago) AS total FROM complementoDetalles GROUP BY complemento_id) det ON det.complemento_id=pag.id GROUP BY pag.id";
+		$sql="SELECT pag.id AS complementoID,pag.fechaPago,pag.folioFiscal,det.total,pag.banco,pag.formadePago,pag.fechaPago,pag.usoCfdi,pag.pagoPDF,pag.pagoXML,pag.pagoPDFCancelado,pag.pagoXMLCancelado,pag.statusPago,det.facturasRelacionadas,pag.emailEnviado,pag.cliente_id,IFNULL(a.display_name,cli.razonSocial) AS nombreCliente FROM complementos pag LEFT JOIN datos_fiscales cli ON pag.cliente_id=cli.cliente_id LEFT JOIN wp_users a ON a.ID=pag.cliente_id INNER JOIN (SELECT complemento_id,GROUP_CONCAT(DISTINCT factura_id SEPARATOR ', ') AS facturasRelacionadas,SUM(estePago) AS total FROM complementoDetalles GROUP BY complemento_id) det ON det.complemento_id=pag.id GROUP BY pag.id";
 		return ejecutarConsulta($sql);		
 	}
 
-	public function listar_facturas($cliente_id){
-		$sql="SELECT fac.id AS facturaID,fac.cliente_id,fac.serie,fac.fecha,fac.folioFiscal,det.subtotal,fac.descuento,cli.razonSocial AS nombreCliente,cli.razonSocial,usr.nombre AS vendedor,fac.status,IFNULL(pago.parcialidad,0) AS parcialidad,pago.saldoAnterior,IFNULL(pago.estePago,0) AS estePago,pago.statusPago FROM factura fac LEFT JOIN datos_fiscales cli ON fac.cliente_id=cli.cliente_id INNER JOIN (SELECT factura_id,SUM(subtotal) AS subtotal FROM facturaDetalle GROUP BY factura_id) det ON fac.id=det.factura_id INNER JOIN users usr ON fac.user_id=usr.id LEFT JOIN (SELECT IFNULL(MIN(detpag.saldoRestante),'0.00') AS saldoRestante,IFNULL(MAX(detpag.saldoAnterior),'0.00') AS saldoAnterior,SUM(estePago) AS estePago,detpag.factura_id,MAX(detpag.parcialidad) AS parcialidad,pag.statusPago FROM complementoDetalles detpag LEFT JOIN complementos pag ON detpag.complemento_id=pag.id WHERE pag.statusPago!='Cancelado' GROUP BY detpag.factura_id) pago ON fac.id=pago.factura_id WHERE fac.cliente_id='$cliente_id' AND fac.status='Facturado' GROUP BY fac.id";
+	public function listar_facturas(){
+		$sql="SELECT fac.id AS facturaID,fac.cliente_id,fac.serie,fac.fecha,fac.folioFiscal,det.subtotal,fac.moneda,fac.descuento,fac.usoCfdi,IFNULL(a.display_name,cli.razonSocial) AS nombreCliente,cli.razonSocial,usr.nombre AS vendedor,fac.status,IFNULL(pago.parcialidad,0) AS parcialidad,pago.saldoAnterior,IFNULL(pago.estePago,0) AS estePago,pago.statusPago FROM factura fac LEFT JOIN datos_fiscales cli ON fac.cliente_id=cli.cliente_id LEFT JOIN wp_users a ON a.ID=fac.cliente_id INNER JOIN (SELECT factura_id,SUM(cantidad*subtotal) AS subtotal FROM facturaDetalle GROUP BY factura_id) det ON fac.id=det.factura_id INNER JOIN users usr ON fac.user_id=usr.id LEFT JOIN (SELECT IFNULL(MIN(detpag.saldoRestante),'0.00') AS saldoRestante,IFNULL(MAX(detpag.saldoAnterior),'0.00') AS saldoAnterior,SUM(estePago) AS estePago,detpag.factura_id,MAX(detpag.parcialidad) AS parcialidad,pag.statusPago FROM complementoDetalles detpag LEFT JOIN complementos pag ON detpag.complemento_id=pag.id WHERE pag.statusPago!='Cancelado' GROUP BY detpag.factura_id) pago ON fac.id=pago.factura_id WHERE fac.status!='Cancelado' AND fac.status!='Pagado' GROUP BY fac.id";
 		return ejecutarConsulta($sql);
 	}
 
@@ -93,7 +98,7 @@ Class Complemento {
 	}
 
 	public function timbra_detallesPago($complementoID){
-		$sql="SELECT pago.id,pago.complemento_id AS complementoID,pago.factura_id,pago.folioFiscalFac,pago.fechaFactura,pago.parcialidad,pago.saldoAnterior,pago.estePago/1.16 AS estePago,pago.saldoRestante/1.16 AS saldoRestante,fac.metodoPago FROM complementoDetalles pago INNER JOIN factura fac ON fac.id=pago.factura_id WHERE pago.complemento_id='$complementoID'";
+		$sql="SELECT pago.id,pago.complemento_id AS complementoID,fac.moneda,fac.tipoCambio,pago.factura_id AS facturaID,fac.serie,pago.folioFiscalFac,pago.fechaFactura,pago.parcialidad,pago.saldoAnterior,pago.estePago/1.16 AS estePago,pago.saldoRestante/1.16 AS saldoRestante,fac.metodoPago,cli.regimenFiscal FROM complementoDetalles pago INNER JOIN factura fac ON fac.id=pago.factura_id INNER JOIN datos_fiscales cli ON fac.cliente_id=cli.cliente_id WHERE pago.complemento_id='$complementoID'";
 		return ejecutarConsulta($sql);
 	}
 

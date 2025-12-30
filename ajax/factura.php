@@ -462,6 +462,7 @@ switch ($_GET["op"]){
 			$XMLcancelar 		= $reg->nombreXML;
 			$PDFcancelar 		= $reg->nombrePDF;
 			$cliente			= $reg->nombreCliente;
+			$pago				= 0;
 		}
 		require_once "../facturar/CFDI_cancelarFactura.php";
 		$respuestaServer = $rspta ? true : false;
