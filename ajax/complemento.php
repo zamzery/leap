@@ -6,9 +6,9 @@ use PHPMailer\PHPMailer\Exception;
 if (strlen(session_id()) < 1) 
 	session_start();
 
-	ini_set('display_errors', 1);
-	ini_set('display_startup_errors', 1);
-	error_reporting(E_ALL & ~E_DEPRECATED);
+	// ini_set('display_errors', 1);
+	// ini_set('display_startup_errors', 1);
+	// error_reporting(E_ALL & ~E_DEPRECATED);
 
 require_once "../models/Complemento.php";
 $pagos=new Complemento();
@@ -144,7 +144,9 @@ switch ($_GET["op"]){
 			$NomArchXML=$_POST['NomArchXML'];
 			$NomArchPDF=$_POST['NomArchPDF'];
 			$UUID=$_POST['UUID'];
-			$rspta3=$pagos->guardaArchivoPago($complementoID,$NomArchPDF,$NomArchXML,$UUID);
+			require_once "../models/Complemento.php";
+			$guarda_pagos=new Complemento();
+			$rspta3=$guarda_pagos->guardaArchivoPago($complementoID,$NomArchPDF,$NomArchXML,$UUID);
 			$rspta3 ? $respuesta : $respuesta = false;
 		} else {
 			$respuesta = false;
