@@ -364,7 +364,7 @@ function cancelar() {
 		bootbox.alert( "Selecciona una <strong>Complemento Relacionado</strong>" );
 	} else {
 		var dialog = bootbox.dialog( {
-			message: '<p class="text-center"><h4><i class="fa fa-cog fa-spin fa-fw"></i> Por favor espera mientras se cancela la complemento...</h4></p>',
+			message: '<p class="text-center"><h4><i class="fa fa-cog fa-spin fa-fw"></i> Por favor espera mientras se cancela el complemento...</h4></p>',
 			closeButton: false
 		} );
 		$.post( "../ajax/complemento.php?op=cancelar", {complementoID: complementoID_cancela, complementoIDRelacionado: complementoIDRelacionado, folioSustitucion: folioSustitucion, motivo: motivo}, function ( e ) {

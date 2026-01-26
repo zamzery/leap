@@ -123,7 +123,8 @@ function listar() {
 			}
 		},
 		"columnDefs": [
-			{"width": "140px", "targets": [ 3, 6 ]},
+			{"width": "140px", "targets": [ 3 ]},
+			{"width": "180px", "targets": [ 6 ]},
 			{"width": "80px", "targets": [ 0, 1, 4, 5 ]},
 			{"className": "text-center", "targets": [ 0, 1, 4, 5, 6 ]},
 			{"className": "text-end", "targets": [ 3 ]},
@@ -201,6 +202,30 @@ function mostrar( pedidoID ) {
 	});
 }
 
+function copiar_pedido( pedidoID ) {
+	bootbox.confirm( "¿Quieres copiar el Pedido seleccionado?", function ( result ) {
+		if ( result ) {
+			var dialog = bootbox.dialog( {
+				message: '<h5><i class="fa fa-cog fa-spin fa-fw" font-size="2"></i> Por favor espera mientras se copia el pedido...</h5>',
+				closeButton: false
+			} );
+			$.post( "../ajax/pedido.php?op=copiar_pedido", {pedidoID: pedidoID}, function ( data, status ) {
+				bootstrap.Modal.getInstance( dialog ).hide();
+				bootbox.alert( data );
+				tabla.clear().draw();
+				tabla.ajax.reload();
+			} ).fail( function () {
+				bootstrap.Modal.getInstance( dialog ).hide();
+				bootbox.alert( 'No se ha podido copiar el pedido' );
+			} ).done( function () {
+				bootstrap.Modal.getInstance( dialog ).hide();
+			} );
+			setTimeout( function () {
+				bootstrap.Modal.getInstance( dialog ).hide();
+			}, 8000 );
+		}
+	} );
+}
 
 function mostrar_pedido( pedidoID ) {
 	$.post( "../ajax/pedido.php?op=mostrar_pedido", {pedidoID: pedidoID}, function ( data, statusUsuario ) {

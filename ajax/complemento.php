@@ -185,7 +185,8 @@ switch ($_GET["op"]){
 		if($respuestaServer==true){
 			$rutaXML=$_POST['rutaXML'];
 			$rutaPDF=$_POST['rutaPDF'];
-			$rspta2=$pagos->guardaPagoCancelado($complementoID,$rutaPDF,$rutaXML,$motivo,$complementoIDRelacionado);
+			$guarda_cancelar=new Complemento();
+			$rspta2=$guarda_cancelar->guardaPagoCancelado($complementoID,$rutaPDF,$rutaXML,$motivo,$complementoIDRelacionado);
 			$respuesta = $rspta2 ? true : false;
 		}
 		echo $respuestaServer ? "Pago Cancelado" : "El pago no se pudo cancelar";

@@ -316,9 +316,10 @@ switch ($_GET["op"]){
 			$botonTimbrar = (isset($reg->facturaID) && $reg->facturaID!='0' && empty($reg->folioFiscal))? ' <button type="button" class="btn btn-info btn-sm" title="Timbrar Pedido" href="#" onclick="timbra('.$reg->facturaID.')"><i class="fas fa-fw fa-cog"></i></button>' : ((isset($reg->facturaID) && isset($reg->folioFiscal) && $reg->status_factura=='Timbrada')? ' <button type="button" class="btn btn-danger btn-sm" title="Cancelar Factura" href="#" onclick="modalCancelaFactura('.$reg->facturaID.')"><i class="fa-solid fa-circle-xmark"></i></button>' : ' <button type="button" class="btn btn-muted btn-sm disabled" title="Timbrar Factura" href="#"><i class="fas fa-fw fa-cog"></i></button>');
 			$linkMostrar = '<a class="link-underline-primary" title="Mostrar Pedido" onclick="mostrar('.$reg->pedidoID.')">'.$reg->pedidoID.'</a>';
 			$statusLabel = ($reg->estado=='wc-pending') ? '<span class="badge rounded-pill text-bg-secondary">Pendiente</span>' :  ( ($reg->estado=='wc-processing') ? '<span class="badge rounded-pill text-bg-info">En Proceso</span>' : ( ($reg->estado=='wc-completed') ? '<span class="badge rounded-pill text-bg-success">Completado</span>' : ( ($reg->estado=='wc-cancelled') ? '<span class="badge rounded-pill text-bg-danger">Cancelado</span>' : '<span class="badge rounded-pill text-bg-secondary">'.htmlspecialchars($reg->estado).'</span>')));
-			$pdf = (isset($reg->folioFiscal))? '<a href="'.$reg->nombrePDF.'" target="_blank"><i class="fas fa-file-pdf text-danger" title="Descargar PDF"></i></a>' : '<i class="fas fa-file-pdf text-muted" title="Descargar PDF"></i>';
-			$xml = (isset($reg->folioFiscal))? ' <a href="'.$reg->nombreXML.'" target="_blank"><i class="fas fa-file-code text-success" title="Descargar XML"></i></a>' : ' <i class="fas fa-file-code text-muted" title="Descargar XML"></i>';
+			$pdf = (isset($reg->folioFiscal))? '<a href="'.$reg->nombrePDF.'" download="'.$reg->nombrePDF.'" target="_blank"><i class="fas fa-file-pdf text-danger" title="Descargar PDF"></i></a>' : '<i class="fas fa-file-pdf text-muted" title="Descargar PDF"></i>';
+			$xml = (isset($reg->folioFiscal))? ' <a href="'.$reg->nombreXML.'" download="'.$reg->nombreXML.'" target="_blank"><i class="fas fa-file-code text-success" title="Descargar XML"></i></a>' : ' <i class="fas fa-file-code text-muted" title="Descargar XML"></i>';
 			$factura = (isset($reg->facturaID))? '<small>'.$reg->facturaID.'-A / <span class="text-muted">'.$reg->metodoPago.'</span></small>' : '';
+			$botonCopiar = ' <button type="button" class="btn btn-orange btn-sm" title="Copiar Pedido" href="#" onclick="copiar_pedido('.$reg->pedidoID.')"><i class="fas fa-fw fa-copy"></i></button>';
 			$data[]=array(
 				"0"=>$linkMostrar,
 				"1"=>date("Y-m-d", strtotime($reg->fecha)),
@@ -326,7 +327,7 @@ switch ($_GET["op"]){
 				"3"=>'$'.number_format($reg->total, 2, '.', ','),
 				"4"=>$pdf.' '.$xml.'<br>'.$factura,
 				"5"=>$statusLabel,
-				"6"=>$botonMostrar.$botonFacturar.$botonTimbrar
+				"6"=>$botonMostrar.$botonFacturar.$botonTimbrar.$botonCopiar
 			);
 		}
 		$results = array(
@@ -358,6 +359,11 @@ switch ($_GET["op"]){
 			"iTotalDisplayRecords"=>count($data), //enviamos el total registros a visualizar
 			"aaData"=>$data);
 		echo json_encode($results);
+	break;
+
+	case 'copiar_pedido':
+		$rspta=$pedidos->copiar_pedido($pedidoID);
+		echo $rspta ? "Pedido copiado exitosamente" : "El Pedido no se pudo copiar";
 	break;
 }
 

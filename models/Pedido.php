@@ -172,5 +172,17 @@ Class Pedido {
 			WHERE p.post_type='product_variation' OR p.post_type = 'product' GROUP BY p.ID";
 		return ejecutarConsulta($sql);
 	}
+
+	public function copiar_pedido($pedidoID){
+		$sw=true;
+		$sql="INSERT INTO pedidos (cliente_id,nombreCliente,observaciones,created_at,status) VALUES (SELECT ped.cliente_id,ped.nombreCliente,ped.observaciones,NOW(),'Espera' WHERE ped.pedido_id='$pedidoID')";
+		$pedidoIDnew=ejecutarConsulta_retornarID($sql) OR $sw=false;
+
+		if($sw==true){
+			$sql_detalles="INSERT INTO pedidosDetalles (pedido_id,producto_id,variante_id,descripcion,cantidad,precioVenta) VALUES (SELECT '$pedidoIDnew',det.producto_id,det.variante_id,det.descripcion,det.cantidad,det.precioVenta FROM pedidosDetalles det WHERE det.pedido_id='$pedidoID')";
+			ejecutarConsulta($sql_detalles) OR $sw=false;
+		}
+		return $sw;
+	}
 }
 ?>
