@@ -2,9 +2,9 @@
 if (strlen(session_id()) < 1) 
 	session_start();
 
-// ini_set('display_errors', 1);
-// ini_set('display_startup_errors', 1);
-// error_reporting(E_ALL);
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
 
 require_once "../models/Pedido.php";
 $pedidos=new Pedido();
@@ -313,7 +313,7 @@ switch ($_GET["op"]){
 			$botonMostrar = ($reg->tipo_pedido=='worpress')? '<button type="button" class="btn btn-dark btn-sm" title="Mostrar Pedido" href="#" onclick="mostrar('.$reg->pedidoID.')"><i class="fas fa-fw fa-pencil-alt"></i></button>' : '<button type="button" class="btn btn-dark btn-sm" title="Mostrar Pedido" href="#" onclick="mostrar_pedido('.$reg->pedidoID.')"><i class="fas fa-fw fa-pencil-alt"></i></button>';
 			$pedidoWordpress = ($reg->tipo_pedido=='worpress')? '1' : '0';
 			$botonFacturar = (isset($reg->facturaID) && empty($reg->folioFiscal))? ' <button type="button" class="btn btn-success btn-sm" title="Editar Factura" href="#" onclick="edita_factura('.$reg->pedidoID.','.$reg->facturaID.','.$pedidoWordpress.')"><i class="fas fa-fw fa-pencil-alt"></i></button>' : ((isset($reg->facturaID) && isset($reg->folioFiscal))? ' <button type="button" class="btn btn-success btn-sm" title="Ver Factura" href="#" onclick="ver_factura('.$reg->facturaID.','.$reg->pedidoID.')"><i class="fas fa-fw fa-eye"></i></button>' : ' <button type="button" class="btn btn-primary btn-sm" title="Facturar Pedido" href="#" onclick="facturar('.$reg->pedidoID.','.$pedidoWordpress.','.$reg->clienteID.')"><i class="fas fa-fw fa-file-invoice-dollar"></i></button>');
-			$botonTimbrar = (isset($reg->facturaID) && $reg->facturaID!='0' && empty($reg->folioFiscal))? ' <button type="button" class="btn btn-info btn-sm" title="Timbrar Pedido" href="#" onclick="timbra('.$reg->facturaID.')"><i class="fas fa-fw fa-cog"></i></button>' : ((isset($reg->facturaID) && isset($reg->folioFiscal) && $reg->status_factura=='Timbrada')? ' <button type="button" class="btn btn-danger btn-sm" title="Cancelar Factura" href="#" onclick="modalCancelaFactura('.$reg->facturaID.')"><i class="fa-solid fa-circle-xmark"></i></button>' : ' <button type="button" class="btn btn-muted btn-sm disabled" title="Timbrar Factura" href="#"><i class="fas fa-fw fa-cog"></i></button>');
+			$botonTimbrar = (isset($reg->facturaID) && $reg->facturaID!='0' && empty($reg->folioFiscal))? ' <button type="button" class="btn btn-info btn-sm" title="Timbrar Pedido" href="#" onclick="timbra('.$reg->facturaID.')"><i class="fas fa-fw fa-cog"></i></button>' : ((isset($reg->facturaID) && isset($reg->folioFiscal) && ($reg->status_factura=='Pagada' || $reg->status_factura=='Facturado'))? ' <button type="button" class="btn btn-danger btn-sm" title="Cancelar Factura" href="#" onclick="modalCancelaFactura('.$reg->facturaID.')"><i class="fa-solid fa-circle-xmark"></i></button>' : ' <button type="button" class="btn btn-muted btn-sm disabled" title="Timbrar Factura" href="#"><i class="fas fa-fw fa-cog"></i></button>');
 			$linkMostrar = '<a class="link-underline-primary" title="Mostrar Pedido" onclick="mostrar('.$reg->pedidoID.')">'.$reg->pedidoID.'</a>';
 			$statusLabel = ($reg->estado=='wc-pending') ? '<span class="badge rounded-pill text-bg-secondary">Pendiente</span>' :  ( ($reg->estado=='wc-processing') ? '<span class="badge rounded-pill text-bg-info">En Proceso</span>' : ( ($reg->estado=='wc-completed') ? '<span class="badge rounded-pill text-bg-success">Completado</span>' : ( ($reg->estado=='wc-cancelled') ? '<span class="badge rounded-pill text-bg-danger">Cancelado</span>' : '<span class="badge rounded-pill text-bg-secondary">'.htmlspecialchars($reg->estado).'</span>')));
 			$pdf = (isset($reg->folioFiscal))? '<a href="'.$reg->nombrePDF.'" download="'.$reg->nombrePDF.'" target="_blank"><i class="fas fa-file-pdf text-danger" title="Descargar PDF"></i></a>' : '<i class="fas fa-file-pdf text-muted" title="Descargar PDF"></i>';
@@ -363,7 +363,13 @@ switch ($_GET["op"]){
 
 	case 'copiar_pedido':
 		$rspta=$pedidos->copiar_pedido($pedidoID);
-		echo $rspta ? "Pedido copiado exitosamente" : "El Pedido no se pudo copiar";
+		if($rspta){
+			echo "Pedido copiado exitosamente";
+		} else {
+			require_once "../config/Conexion.php";
+			global $conexion;
+			echo "El Pedido no se pudo copiar. Error MySQL: " . (isset($conexion) ? $conexion->error : "Conexión no disponible");
+		}
 	break;
 }
 

@@ -174,15 +174,99 @@ Class Pedido {
 	}
 
 	public function copiar_pedido($pedidoID){
+		global $conexion;
 		$sw=true;
-		$sql="INSERT INTO pedidos (cliente_id,nombreCliente,observaciones,created_at,status) VALUES (SELECT ped.cliente_id,ped.nombreCliente,ped.observaciones,NOW(),'Espera' WHERE ped.pedido_id='$pedidoID')";
-		$pedidoIDnew=ejecutarConsulta_retornarID($sql) OR $sw=false;
+		
+		// Detectar si es pedido manual o de WordPress
+		$sql_check="SELECT id FROM pedidos WHERE id='$pedidoID'";
+		$es_manual = ejecutarConsultaSimpleFila($sql_check);
+		
+		if($es_manual){
+			// Copiar pedido manual
+			$sql="INSERT INTO pedidos (cliente_id,nombreCliente,observaciones,created_at,status) SELECT ped.cliente_id,ped.nombreCliente,ped.observaciones,NOW(),'Espera' FROM pedidos ped WHERE ped.id='$pedidoID'";
+			$resultado = $conexion->query($sql);
+			
+			if(!$resultado){
+				return false;
+			}
+			
+			$pedidoIDnew = $conexion->insert_id;
+			
+			if(!$pedidoIDnew || $pedidoIDnew == 0){
+				return false;
+			}
 
-		if($sw==true){
-			$sql_detalles="INSERT INTO pedidosDetalles (pedido_id,producto_id,variante_id,descripcion,cantidad,precioVenta) VALUES (SELECT '$pedidoIDnew',det.producto_id,det.variante_id,det.descripcion,det.cantidad,det.precioVenta FROM pedidosDetalles det WHERE det.pedido_id='$pedidoID')";
-			ejecutarConsulta($sql_detalles) OR $sw=false;
+			$sql_detalles="INSERT INTO pedidosDetalles (pedido_id,producto_id,variante_id,descripcion,cantidad,precioVenta) SELECT '$pedidoIDnew',det.producto_id,det.variante_id,det.descripcion,det.cantidad,det.precioVenta FROM pedidosDetalles det WHERE det.pedido_id='$pedidoID'";
+			$resultado_detalles = $conexion->query($sql_detalles);
+			
+			if(!$resultado_detalles){
+				return false;
+			}
+		} else {
+			// Copiar pedido de WordPress a pedidos manuales
+			$sql_wp="SELECT CONCAT(pm_first.meta_value, ' ', pm_last.meta_value) AS nombreCliente, IFNULL(user.ID,0) AS cliente_id FROM wp_posts p LEFT JOIN wp_postmeta pm_first ON p.ID = pm_first.post_id AND pm_first.meta_key = '_billing_first_name' LEFT JOIN wp_postmeta pm_last ON p.ID = pm_last.post_id AND pm_last.meta_key = '_billing_last_name' LEFT JOIN wp_postmeta customer ON p.ID=customer.post_id AND customer.meta_key='_customer_user' LEFT JOIN wp_users user ON user.ID=customer.meta_value WHERE p.ID='$pedidoID'";
+			$datos_wp = ejecutarConsultaSimpleFila($sql_wp);
+			
+			if(!$datos_wp){
+				return false;
+			}
+			
+			$cliente_id = $datos_wp['cliente_id'];
+			$nombreCliente = $datos_wp['nombreCliente'];
+			
+			// Insertar nuevo pedido manual
+			$sql_pedido="INSERT INTO pedidos (cliente_id,nombreCliente,observaciones,created_at,status) VALUES ('$cliente_id','$nombreCliente','Copia de pedido WooCommerce #$pedidoID',NOW(),'Espera')";
+			$resultado_pedido = $conexion->query($sql_pedido);
+			
+			if(!$resultado_pedido){
+				return false;
+			}
+			
+			$pedidoIDnew = $conexion->insert_id;
+			
+			if(!$pedidoIDnew || $pedidoIDnew == 0){
+				return false;
+			}
+			
+			// Copiar detalles de WordPress (calcular precio unitario dividiendo total entre cantidad)
+			$sql_detalles="INSERT INTO pedidosDetalles (pedido_id,producto_id,variante_id,descripcion,cantidad,precioVenta) 
+			SELECT '$pedidoIDnew', 
+				IF(pm_variation.meta_value IS NULL OR pm_variation.meta_value = 0, product_id_meta.meta_value, pm_variation.meta_value) AS producto_id, 
+				IFNULL(pm_variation.meta_value,0) AS variante_id, 
+				oi.order_item_name AS descripcion, 
+				pm_qty.meta_value AS cantidad, 
+				ROUND(pm_total.meta_value / pm_qty.meta_value, 2) AS precioVenta 
+			FROM wp_woocommerce_order_items oi 
+			LEFT JOIN wp_woocommerce_order_itemmeta pm_qty ON oi.order_item_id = pm_qty.order_item_id AND pm_qty.meta_key = '_qty' 
+			LEFT JOIN wp_woocommerce_order_itemmeta product_id_meta ON oi.order_item_id = product_id_meta.order_item_id AND product_id_meta.meta_key = '_product_id' 
+			LEFT JOIN wp_woocommerce_order_itemmeta pm_total ON oi.order_item_id = pm_total.order_item_id AND pm_total.meta_key = '_line_total' 
+			LEFT JOIN wp_woocommerce_order_itemmeta pm_variation ON oi.order_item_id = pm_variation.order_item_id AND pm_variation.meta_key = '_variation_id' 
+			WHERE oi.order_id = '$pedidoID' AND oi.order_item_type = 'line_item' AND pm_qty.meta_value > 0";
+			$resultado_detalles = $conexion->query($sql_detalles);
+			
+			if(!$resultado_detalles){
+				return false;
+			}
+			
+			// Copiar envíos si existen
+			$sql_envios="INSERT INTO pedidosDetalles (pedido_id,producto_id,variante_id,descripcion,cantidad,precioVenta) 
+			SELECT '$pedidoIDnew', 
+				15423 AS producto_id, 
+				0 AS variante_id, 
+				ship.order_item_name AS descripcion, 
+				1 AS cantidad, 
+				ship_cost.meta_value AS precioVenta 
+			FROM wp_woocommerce_order_items ship 
+			LEFT JOIN wp_woocommerce_order_itemmeta ship_cost ON ship.order_item_id = ship_cost.order_item_id AND ship_cost.meta_key = 'cost' 
+			WHERE ship.order_id = '$pedidoID' AND ship.order_item_type = 'shipping' AND ship_cost.meta_value IS NOT NULL AND ship_cost.meta_value > 0";
+			$resultado_envios = $conexion->query($sql_envios);
+			
+			if(!$resultado_envios){
+				return false;
+			}
 		}
-		return $sw;
+		
+		return true;
 	}
 }
 ?>
