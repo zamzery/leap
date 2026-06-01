@@ -8,6 +8,59 @@ Class Escritorio {
 
 	}
 
+	public function resumenFinanciero(){
+		$sql="SELECT
+			IFNULL(ventas.totalVentas,0) AS ventas,
+			IFNULL(facturas.totalFacturas,0) AS facturas,
+			IFNULL(pagos.totalPagos,0) AS pagos,
+			IFNULL(facturas.totalFacturas,0)-IFNULL(pagos.totalPagos,0) AS balance
+			FROM (SELECT 1) base
+			LEFT JOIN (
+				SELECT SUM(total) AS totalVentas FROM (
+					SELECT SUM(pm_total.meta_value) AS total
+					FROM wp_posts p
+					LEFT JOIN wp_postmeta pm_total ON p.ID=pm_total.post_id AND pm_total.meta_key='_order_total'
+					WHERE p.post_type='shop_order'
+						AND p.post_status!='wc-pending'
+						AND p.post_status!='wc-cancelled'
+						AND MONTH(p.post_date)=MONTH(CURRENT_DATE())
+						AND YEAR(p.post_date)=YEAR(CURRENT_DATE())
+					UNION ALL
+					SELECT SUM(det.totales) AS total
+					FROM pedidos ped
+					INNER JOIN (SELECT pedido_id,SUM(cantidad*precioVenta) AS totales FROM pedidosDetalles GROUP BY pedido_id) det ON ped.id=det.pedido_id
+					WHERE MONTH(ped.created_at)=MONTH(CURRENT_DATE())
+						AND YEAR(ped.created_at)=YEAR(CURRENT_DATE())
+				) v
+			) ventas ON 1=1
+			LEFT JOIN (
+				SELECT SUM((tot.subtotal-IFNULL(fac.descuento,0))*1.16) AS totalFacturas
+				FROM factura fac
+				INNER JOIN (SELECT factura_id,SUM(subtotal) AS subtotal FROM facturaDetalle GROUP BY factura_id) tot ON fac.id=tot.factura_id
+				WHERE fac.status!='Cancelado'
+					AND MONTH(fac.fecha)=MONTH(CURRENT_DATE())
+					AND YEAR(fac.fecha)=YEAR(CURRENT_DATE())
+			) facturas ON 1=1
+			LEFT JOIN (
+				SELECT SUM(pago) AS totalPagos
+				FROM pagos
+				WHERE activo='1'
+					AND MONTH(fechaPago)=MONTH(CURRENT_DATE())
+					AND YEAR(fechaPago)=YEAR(CURRENT_DATE())
+			) pagos ON 1=1";
+		return ejecutarConsultaSimpleFila($sql);
+	}
+
+	public function listarFacturas(){
+		$sql="SELECT fac.id AS facturaID,fac.serie,fac.metodoPago,fac.fecha,fac.folioFiscal,fac.nombrePDF,fac.nombreXML,fac.cliente_id,fac.status,IFNULL(dat.razonSocial,cli.display_name) AS nombreCliente,dat.regimenFiscal,IFNULL(tot.subtotal,0) AS subtotal,IFNULL(tot.subtotal,0)*1.16 AS total,IFNULL(pagado.pagado,0) AS pagado,fac.nombrePDFCancelado,fac.nombreXMLCancelado FROM factura fac LEFT JOIN datos_fiscales dat ON fac.cliente_id=dat.cliente_id LEFT JOIN wp_users cli ON fac.cliente_id=cli.ID LEFT JOIN (SELECT factura_id,SUM(subtotal) AS subtotal FROM facturaDetalle GROUP BY factura_id) tot ON fac.id=tot.factura_id LEFT JOIN (SELECT detpag.factura_id,SUM(detpag.estePago) AS pagado FROM complementoDetalles detpag LEFT JOIN complementos comp ON detpag.complemento_id=comp.id WHERE comp.statusPago!='Cancelado' GROUP BY factura_id) pagado ON fac.id=pagado.factura_id GROUP BY fac.id ORDER BY fac.id DESC";
+		return ejecutarConsulta($sql);
+	}
+
+	public function listarPagos(){
+		$sql="SELECT pag.id AS pagoID,pag.fechaPago,pag.pago,pag.comprobantePago,pag.activo,IFNULL(cli.display_name,dat.razonSocial) AS nombreCliente,met.nombre AS nombreMetodo FROM pagos pag LEFT JOIN wp_users cli ON cli.ID=pag.cliente_id LEFT JOIN datos_fiscales dat ON dat.cliente_id=pag.cliente_id LEFT JOIN metodopagos met ON met.id=pag.metodopago_id ORDER BY pag.id DESC";
+		return ejecutarConsulta($sql);
+	}
+
 	public function mostrar($clienteID){
 		$sql="SELECT cli.id AS clienteID,cli.nombre AS nombreCliente,IFNULL(cla.numeroClases,0) AS numeroClases,IFNULL(alu.numeroAlumnos,0) AS numeroAlumnos,IFNULL(alunum.asistenciasAlumnos,0) AS asistenciasAlumnos,IFNULL(alunum.asistenciasTotales,0) AS asistenciasTotales FROM clientes cli LEFT JOIN (SELECT id,cliente_id,COUNT(id) AS numeroClases FROM clases WHERE activo='1' GROUP BY cliente_id) cla ON cli.id=cla.cliente_id LEFT JOIN (SELECT cliente_id,COUNT(id) AS numeroAlumnos FROM alumnos WHERE activo='1' GROUP BY cliente_id) alu ON cli.id=alu.cliente_id
 

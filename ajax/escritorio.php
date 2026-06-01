@@ -18,6 +18,85 @@ $comentarios=isset($_POST["comentarios"])? limpiarCadena($_POST["comentarios"]):
 $activo=isset($_POST["activo"])? limpiarCadena($_POST["activo"]):"";
 
 switch ($_GET["op"]){
+	case 'resumen_financiero':
+		$rspta=$escritorios->resumenFinanciero();
+		echo json_encode($rspta);
+	break;
+
+	case 'listar_facturas':
+		$rspta=$escritorios->listarFacturas();
+		$data= Array();
+
+		while ($reg=$rspta->fetch_object()){
+			if($reg->regimenFiscal=='601'){
+				$subtotal = $reg->total/1.16;
+				$isr2 = $subtotal * 0.0125;
+				$iva2 = $subtotal * 0.106700;
+				$total = $reg->total - ($isr2 + $iva2);
+			} else {
+				$total = $reg->total;
+			}
+
+			$pagado = ($reg->status=='Pagada')? $total : $reg->pagado;
+			$saldo = ($total-$pagado==0)? '<span class="text-success fw-bold">$0.00</span>' : '$'.number_format($total-$pagado,2,'.',',');
+			$metodoPago = ($reg->metodoPago=='PUE')? '<small class="fw-bold text-primary">PUE</small>' : '<small class="fw-bold text-purple">PPD</small>';
+			$pdfXml = (isset($reg->nombrePDFCancelado) && $reg->nombrePDFCancelado!='')
+				? '<a href="'.$reg->nombrePDFCancelado.'" target="_blank"><img class="img-thumbnail" width="30" height="30" src="../public/images/pdf-file.png"></a> <a href="'.$reg->nombreXMLCancelado.'" download target="_blank"><img class="img-thumbnail" width="30" height="30" src="../public/images/xml-file.png"></a>'
+				: ((empty($reg->nombrePDF))
+					? '<span style="display:none;">0</span><img class="img-thumbnail" style="filter: grayscale(100%);opacity: 0.5;" width="30" height="30" src="../public/images/pdf-file.png"> <img class="img-thumbnail" style="filter: grayscale(100%);opacity: 0.5;" width="30" height="30" src="../public/images/xml-file.png">'
+					: '<span style="display:none;">1</span><a href="'.$reg->nombrePDF.'" target="_blank"><img class="img-thumbnail" width="30" height="30" src="../public/images/pdf-file.png"></a> <a href="'.$reg->nombreXML.'" download target="_blank"><img class="img-thumbnail" width="30" height="30" src="../public/images/xml-file.png"></a>');
+			$status = ($reg->status=='Cancelado')
+				? '<span class="badge bg-danger">Cancelada</span>'
+				: ((($total-$pagado)==0 && $reg->status!='Espera') ? '<span class="badge bg-success">Pagada</span>' : ((empty($reg->nombrePDF)) ? '<span class="badge bg-dark">Espera</span>' : '<span class="badge bg-primary">Timbrada</span>'));
+
+			$data[]=array(
+				"0"=>$reg->facturaID.'-'.$reg->serie.' '.$metodoPago,
+				"1"=>date("Y-m-d", strtotime($reg->fecha)),
+				"2"=>$reg->nombreCliente,
+				"3"=>'$ '.number_format($total,2,'.',','),
+				"4"=>'$ '.number_format($pagado,2,'.',','),
+				"5"=>$saldo,
+				"6"=>$pdfXml,
+				"7"=>$status
+			);
+		}
+		$results = array(
+			"sEcho"=>1,
+			"iTotalRecords"=>count($data),
+			"iTotalDisplayRecords"=>count($data),
+			"aaData"=>$data);
+		echo json_encode($results);
+	break;
+
+	case 'listar_pagos':
+		$rspta=$escritorios->listarPagos();
+		$data= Array();
+
+		while ($reg=$rspta->fetch_object()){
+			$tipoArchivo = substr($reg->comprobantePago, -3);
+			if($tipoArchivo=='pdf' || $tipoArchivo=='PDF'){
+				$imagenPago = '<span style="display:none;">PDF</span><a href="../public/files/pagos/'.$reg->comprobantePago.'" target="_blank"><img class="img-thumbnail" width="35" height="35" src="../public/images/pdf-file.png"></a>';
+			} else {
+				$imagenPago = ($reg->comprobantePago)?'<span style="display:none;">JPG</span><a href="../public/files/pagos/'.$reg->comprobantePago.'" data-featherlight="image"><img class="img-thumbnail" width="35" height="35" src="../public/files/pagos/'.$reg->comprobantePago.'"></a>' : '<span style="display:none;">ZZZ</span><img class="img-thumbnail" width="35" height="35" src="../public/images/placeholder.jpg">';
+			}
+			$data[]=array(
+				"0"=>$reg->pagoID,
+				"1"=>$reg->fechaPago,
+				"2"=>$reg->nombreCliente,
+				"3"=>$reg->nombreMetodo,
+				"4"=>'$'.number_format($reg->pago,2,'.',','),
+				"5"=>$imagenPago,
+				"6"=>($reg->activo)?'<span class="badge bg-success">Activado</span>':'<span class="badge bg-danger">Desactivado</span>'
+			);
+		}
+		$results = array(
+			"sEcho"=>1,
+			"iTotalRecords"=>count($data),
+			"iTotalDisplayRecords"=>count($data),
+			"aaData"=>$data);
+		echo json_encode($results);
+	break;
+
 	case 'mostrar':
 		$rspta=$escritorios->mostrar($clienteID);
 		echo json_encode($rspta);

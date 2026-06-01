@@ -87,7 +87,7 @@ if ($_SESSION['escritoriover']==1){
 				data-live-search="true" title="Selecciona al Cliente" onchange="mostrar(this)" value="0"></select>
 		</div> -->
 		<div class="col-lg-6 col-xl-3 mb-4 formulariogrupos" style="height:130px;">
-			<a href="#tablaAlumnos" style="text-decoration: none;">
+			<a href="#tblFacturas" style="text-decoration: none;">
 				<div class="card bg-primary text-white h-100">
 					<div class="card-body">
 						<div class="d-flex justify-content-between align-items-center">
@@ -102,12 +102,12 @@ if ($_SESSION['escritoriover']==1){
 			</a>
 		</div>
 		<div class="col-lg-6 col-xl-3 mb-4 formulariogrupos" style="height:130px;">
-			<div class="card bg-danger text-white h-100">
+			<div class="card bg-warning text-white h-100">
 				<div class="card-body">
 					<div class="d-flex justify-content-between align-items-center">
 						<div class="me-3">
-							<div class="text-white small">Pagos Efectuados</div>
-							<div class="text-xl fw-bold text-white">$<span id="numeroEfectuados">0.00</span></div>
+							<div class="text-white small">Facturas Efectuadas</div>
+							<div class="text-xl fw-bold text-white">$<span id="numeroFacturas">0.00</span></div>
 						</div>
 						<span class="fa-stack">
 							<i class="fa-solid fa-dollar-sign text-white-50 fa-stack-2x"
@@ -124,8 +124,8 @@ if ($_SESSION['escritoriover']==1){
 				<div class="card-body">
 					<div class="d-flex justify-content-between align-items-center">
 						<div class="me-3">
-							<div class="text-white small">Pagos Recibidos</div>
-							<div class="text-xl fw-bold text-white">$<span id="numeroRecibidos">0.00</span></div>
+							<div class="text-white small">Pagos Registrados</div>
+							<div class="text-xl fw-bold text-white">$<span id="numeroRegistrados">0.00</span></div>
 						</div>
 						<span class="fa-stack">
 							<i class="fa-solid fa-dollar-sign text-white-50 fa-stack-2x"
@@ -169,9 +169,7 @@ if ($_SESSION['escritoriover']==1){
 							<th>Pagado</th>
 							<th>Saldo</th>
 							<th>PDF/XML</th>
-							<th>Pagos</th>
 							<th>Status</th>
-							<th>Acciones</th>
 						</thead>
 						<tbody>
 						</tbody>
@@ -183,9 +181,7 @@ if ($_SESSION['escritoriover']==1){
 							<th>Pagado</th>
 							<th>Saldo</th>
 							<th>PDF/XML</th>
-							<th>Pagos</th>
 							<th>Status</th>
-							<th>Acciones</th>
 						</tfoot>
 					</table>
 				</div>
@@ -212,24 +208,22 @@ if ($_SESSION['escritoriover']==1){
 						<thead class="bg-dark text-light">
 							<th>#</th>
 							<th>Fecha</th>
-							<th>Alumno</th>
+							<th>Cliente</th>
 							<th>Metodo Pago</th>
 							<th>Pago</th>
-							<th></th>
+							<th>Comprobante</th>
 							<th>Status</th>
-							<th>Acciones</th>
 						</thead>
 						<tbody>
 						</tbody>
 						<tfoot>
 							<th>#</th>
 							<th>Fecha</th>
-							<th>Alumno</th>
+							<th>Cliente</th>
 							<th>Metodo Pago</th>
 							<th>Pago</th>
-							<th></th>
+							<th>Comprobante</th>
 							<th>Status</th>
-							<th>Acciones</th>
 						</tfoot>
 					</table>
 				</div>
@@ -256,24 +250,22 @@ if ($_SESSION['escritoriover']==1){
 						<thead class="bg-dark text-light">
 							<th>#</th>
 							<th>Fecha</th>
-							<th>Alumno</th>
+							<th>Cliente</th>
 							<th>Metodo Pago</th>
 							<th>Pago</th>
-							<th></th>
+							<th>Comprobante</th>
 							<th>Status</th>
-							<th>Acciones</th>
 						</thead>
 						<tbody>
 						</tbody>
 						<tfoot>
 							<th>#</th>
 							<th>Fecha</th>
-							<th>Alumno</th>
+							<th>Cliente</th>
 							<th>Metodo Pago</th>
 							<th>Pago</th>
-							<th></th>
+							<th>Comprobante</th>
 							<th>Status</th>
-							<th>Acciones</th>
 						</tfoot>
 					</table>
 				</div>
