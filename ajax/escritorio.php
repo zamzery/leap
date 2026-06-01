@@ -73,20 +73,24 @@ switch ($_GET["op"]){
 		$data= Array();
 
 		while ($reg=$rspta->fetch_object()){
-			$tipoArchivo = substr($reg->comprobantePago, -3);
-			if($tipoArchivo=='pdf' || $tipoArchivo=='PDF'){
-				$imagenPago = '<span style="display:none;">PDF</span><a href="../public/files/pagos/'.$reg->comprobantePago.'" target="_blank"><img class="img-thumbnail" width="35" height="35" src="../public/images/pdf-file.png"></a>';
-			} else {
-				$imagenPago = ($reg->comprobantePago)?'<span style="display:none;">JPG</span><a href="../public/files/pagos/'.$reg->comprobantePago.'" data-featherlight="image"><img class="img-thumbnail" width="35" height="35" src="../public/files/pagos/'.$reg->comprobantePago.'"></a>' : '<span style="display:none;">ZZZ</span><img class="img-thumbnail" width="35" height="35" src="../public/images/placeholder.jpg">';
-			}
+			$pdfXml = (isset($reg->pagoPDFCancelado) && $reg->pagoPDFCancelado!='')
+				? '<span style="display:none;">2</span><a href="'.$reg->pagoPDFCancelado.'" target="_blank"><img class="img-thumbnail" width="30" height="30" src="../public/images/pdf-file.png"></a> <a href="'.$reg->pagoXMLCancelado.'" download target="_blank"><img class="img-thumbnail" width="30" height="30" src="../public/images/xml-file.png"></a>'
+				: ((empty($reg->pagoPDF))
+					? '<span style="display:none;">0</span><img class="img-thumbnail" style="filter: grayscale(100%);opacity: 0.5;" width="30" height="30" src="../public/images/pdf-file.png"> <img class="img-thumbnail" style="filter: grayscale(100%);opacity: 0.5;" width="30" height="30" src="../public/images/xml-file.png">'
+					: '<span style="display:none;">1</span><a href="'.$reg->pagoPDF.'" target="_blank"><img class="img-thumbnail" width="30" height="30" src="../public/images/pdf-file.png"></a> <a href="'.$reg->pagoXML.'" download target="_blank"><img class="img-thumbnail" width="30" height="30" src="../public/images/xml-file.png"></a>');
+			$status = ($reg->statusPago=='En Espera')
+				? '<span class="badge bg-dark">En Espera</span>'
+				: (($reg->statusPago=='Timbrada')
+					? '<span class="badge bg-success">Timbrada</span>'
+					: '<span class="badge bg-danger">Cancelada</span>');
 			$data[]=array(
-				"0"=>$reg->pagoID,
-				"1"=>$reg->fechaPago,
-				"2"=>$reg->nombreCliente,
-				"3"=>$reg->nombreMetodo,
-				"4"=>'$'.number_format($reg->pago,2,'.',','),
-				"5"=>$imagenPago,
-				"6"=>($reg->activo)?'<span class="badge bg-success">Activado</span>':'<span class="badge bg-danger">Desactivado</span>'
+				"0"=>$reg->complementoID,
+				"1"=>$reg->facturasRelacionadas,
+				"2"=>date("Y-m-d", strtotime($reg->fechaPago)),
+				"3"=>$reg->nombreCliente,
+				"4"=>'$ '.number_format($reg->total,2,'.',','),
+				"5"=>$pdfXml,
+				"6"=>$status
 			);
 		}
 		$results = array(

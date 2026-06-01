@@ -92,7 +92,7 @@ if ($_SESSION['escritoriover']==1){
 					<div class="card-body">
 						<div class="d-flex justify-content-between align-items-center">
 							<div class="me-3">
-								<div class="text-white small">Total de Ventas del Mes</div>
+								<div class="text-white small">Ventas del Mes a Hoy</div>
 								<div class="text-xl fw-bold text-white">$<span id="numeroVentas">0.00</span></div>
 							</div>
 							<i class="fa-solid fa-cart-shopping text-white-50 fa-2xl"></i>
@@ -106,7 +106,7 @@ if ($_SESSION['escritoriover']==1){
 				<div class="card-body">
 					<div class="d-flex justify-content-between align-items-center">
 						<div class="me-3">
-							<div class="text-white small">Facturas Efectuadas</div>
+							<div class="text-white small">Facturas Efectuadas a Hoy</div>
 							<div class="text-xl fw-bold text-white">$<span id="numeroFacturas">0.00</span></div>
 						</div>
 						<span class="fa-stack">
@@ -124,7 +124,7 @@ if ($_SESSION['escritoriover']==1){
 				<div class="card-body">
 					<div class="d-flex justify-content-between align-items-center">
 						<div class="me-3">
-							<div class="text-white small">Pagos Registrados</div>
+							<div class="text-white small">Pagos Realizados a Hoy</div>
 							<div class="text-xl fw-bold text-white">$<span id="numeroRegistrados">0.00</span></div>
 						</div>
 						<span class="fa-stack">
@@ -142,8 +142,8 @@ if ($_SESSION['escritoriover']==1){
 				<div class="card-body">
 					<div class="d-flex justify-content-between align-items-center">
 						<div class="me-3">
-							<div class="text-white small">Balance</div>
-							<div class="text-xl fw-bold text-white">$<span id="balance">0.00</span></div>
+							<div class="text-white small">Balance Pendiente</div>
+							<div class="text-xl fw-bold text-white"><span id="balance">Pendiente</span></div>
 						</div>
 						<i class="fa-solid fa-scale-balanced text-white-50 fa-2xl"></i>
 					</div>
@@ -207,22 +207,22 @@ if ($_SESSION['escritoriover']==1){
 						style="width:100%;">
 						<thead class="bg-dark text-light">
 							<th>#</th>
+							<th>Facturas</th>
 							<th>Fecha</th>
 							<th>Cliente</th>
-							<th>Metodo Pago</th>
 							<th>Pago</th>
-							<th>Comprobante</th>
+							<th>PDF/XML</th>
 							<th>Status</th>
 						</thead>
 						<tbody>
 						</tbody>
 						<tfoot>
 							<th>#</th>
+							<th>Facturas</th>
 							<th>Fecha</th>
 							<th>Cliente</th>
-							<th>Metodo Pago</th>
 							<th>Pago</th>
-							<th>Comprobante</th>
+							<th>PDF/XML</th>
 							<th>Status</th>
 						</tfoot>
 					</table>
@@ -237,7 +237,7 @@ if ($_SESSION['escritoriover']==1){
 		</div>
 	</div>
 
-	<div class="card formulariogrupos mb-4">
+	<!-- <div class="card formulariogrupos mb-4">
 		<div class="card-header">
 			Lista de Pagos Efectuados
 		</div>
@@ -277,7 +277,7 @@ if ($_SESSION['escritoriover']==1){
 				</div>
 			</div>
 		</div>
-	</div>
+	</div> -->
 </div><!-- /.container-fluid -->
 <!--Fin-Contenido-->
 

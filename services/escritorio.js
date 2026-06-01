@@ -1,13 +1,11 @@
 var tablaFacturas;
 var tablaRecibidos;
-var tablaEfectuados;
 
 function init() {
 	mostrarform( false );
 	cargarResumenFinanciero();
 	listarFacturas();
-	listarPagos( '#tblRecibidos', 'recibidos' );
-	listarPagos( '#tblEfectuados', 'efectuados' );
+	listarPagos( '#tblRecibidos' );
 }
 
 function formatoMoneda( valor ) {
@@ -21,7 +19,7 @@ function cargarResumenFinanciero() {
 		$( "#numeroVentas" ).html( formatoMoneda( data.ventas ) );
 		$( "#numeroFacturas" ).html( formatoMoneda( data.facturas ) );
 		$( "#numeroRegistrados" ).html( formatoMoneda( data.pagos ) );
-		$( "#balance" ).html( formatoMoneda( data.balance ) );
+		$( "#balance" ).html( "Pendiente" );
 	} );
 }
 
@@ -80,18 +78,18 @@ function listarFacturas() {
 	} );
 }
 
-function listarPagos( selectorTabla, tipo ) {
+function listarPagos( selectorTabla ) {
 	configurarBuscadores( selectorTabla );
-	var tabla = $( selectorTabla ).DataTable( {
+	tablaRecibidos = $( selectorTabla ).DataTable( {
 		"aProcessing": true,
 		"aServerSide": true,
 		dom: "f<'row'<'col-sm-2'l><'col-sm-2'B><'col-sm-8'p>>rt<'bottom'ip<'clear'>>",
 		buttons: [
-			{extend: 'excelHtml5', title: 'Listado de Pagos ' + tipo, exportOptions: {columns: [ 0, 1, 2, 3, 4, 6 ]}, className: 'btn btn-sm btn-primary'},
-			{extend: 'pdf', title: 'Listado de Pagos ' + tipo, exportOptions: {columns: [ 0, 1, 2, 3, 4, 6 ]}, orientation: 'landscape', className: 'btn btn-sm btn-primary'},
+			{extend: 'excelHtml5', title: 'Listado de Complementos de Pago', exportOptions: {columns: [ 0, 1, 2, 3, 4, 6 ]}, className: 'btn btn-sm btn-primary'},
+			{extend: 'pdf', title: 'Listado de Complementos de Pago', exportOptions: {columns: [ 0, 1, 2, 3, 4, 6 ]}, orientation: 'landscape', className: 'btn btn-sm btn-primary'},
 		],
 		"ajax": {
-			url: '../ajax/escritorio.php?op=listar_pagos&tipo=' + tipo,
+			url: '../ajax/escritorio.php?op=listar_pagos',
 			type: "get",
 			dataType: "json",
 			error: function ( e ) {
@@ -110,12 +108,6 @@ function listarPagos( selectorTabla, tipo ) {
 		"iDisplayLength": 25,
 		"order": [ [ 0, "desc" ] ]
 	} );
-
-	if ( tipo == 'recibidos' ) {
-		tablaRecibidos = tabla;
-	} else {
-		tablaEfectuados = tabla;
-	}
 }
 
 function mostrarform( flag ) {

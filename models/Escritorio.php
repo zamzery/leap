@@ -13,7 +13,7 @@ Class Escritorio {
 			IFNULL(ventas.totalVentas,0) AS ventas,
 			IFNULL(facturas.totalFacturas,0) AS facturas,
 			IFNULL(pagos.totalPagos,0) AS pagos,
-			IFNULL(facturas.totalFacturas,0)-IFNULL(pagos.totalPagos,0) AS balance
+			NULL AS balance
 			FROM (SELECT 1) base
 			LEFT JOIN (
 				SELECT SUM(total) AS totalVentas FROM (
@@ -23,14 +23,14 @@ Class Escritorio {
 					WHERE p.post_type='shop_order'
 						AND p.post_status!='wc-pending'
 						AND p.post_status!='wc-cancelled'
-						AND MONTH(p.post_date)=MONTH(CURRENT_DATE())
-						AND YEAR(p.post_date)=YEAR(CURRENT_DATE())
+						AND p.post_date>=DATE_FORMAT(CURRENT_DATE(), '%Y-%m-01')
+						AND p.post_date<DATE_ADD(CURRENT_DATE(), INTERVAL 1 DAY)
 					UNION ALL
 					SELECT SUM(det.totales) AS total
 					FROM pedidos ped
 					INNER JOIN (SELECT pedido_id,SUM(cantidad*precioVenta) AS totales FROM pedidosDetalles GROUP BY pedido_id) det ON ped.id=det.pedido_id
-					WHERE MONTH(ped.created_at)=MONTH(CURRENT_DATE())
-						AND YEAR(ped.created_at)=YEAR(CURRENT_DATE())
+					WHERE ped.created_at>=DATE_FORMAT(CURRENT_DATE(), '%Y-%m-01')
+						AND ped.created_at<DATE_ADD(CURRENT_DATE(), INTERVAL 1 DAY)
 				) v
 			) ventas ON 1=1
 			LEFT JOIN (
@@ -38,15 +38,16 @@ Class Escritorio {
 				FROM factura fac
 				INNER JOIN (SELECT factura_id,SUM(subtotal) AS subtotal FROM facturaDetalle GROUP BY factura_id) tot ON fac.id=tot.factura_id
 				WHERE fac.status!='Cancelado'
-					AND MONTH(fac.fecha)=MONTH(CURRENT_DATE())
-					AND YEAR(fac.fecha)=YEAR(CURRENT_DATE())
+					AND fac.fecha>=DATE_FORMAT(CURRENT_DATE(), '%Y-%m-01')
+					AND fac.fecha<DATE_ADD(CURRENT_DATE(), INTERVAL 1 DAY)
 			) facturas ON 1=1
 			LEFT JOIN (
-				SELECT SUM(pago) AS totalPagos
-				FROM pagos
-				WHERE activo='1'
-					AND MONTH(fechaPago)=MONTH(CURRENT_DATE())
-					AND YEAR(fechaPago)=YEAR(CURRENT_DATE())
+				SELECT SUM(det.total) AS totalPagos
+				FROM complementos pag
+				INNER JOIN (SELECT complemento_id,SUM(estePago) AS total FROM complementoDetalles GROUP BY complemento_id) det ON det.complemento_id=pag.id
+				WHERE pag.statusPago!='Cancelado'
+					AND pag.fechaPago>=DATE_FORMAT(CURRENT_DATE(), '%Y-%m-01')
+					AND pag.fechaPago<DATE_ADD(CURRENT_DATE(), INTERVAL 1 DAY)
 			) pagos ON 1=1";
 		return ejecutarConsultaSimpleFila($sql);
 	}
@@ -57,7 +58,7 @@ Class Escritorio {
 	}
 
 	public function listarPagos(){
-		$sql="SELECT pag.id AS pagoID,pag.fechaPago,pag.pago,pag.comprobantePago,pag.activo,IFNULL(cli.display_name,dat.razonSocial) AS nombreCliente,met.nombre AS nombreMetodo FROM pagos pag LEFT JOIN wp_users cli ON cli.ID=pag.cliente_id LEFT JOIN datos_fiscales dat ON dat.cliente_id=pag.cliente_id LEFT JOIN metodopagos met ON met.id=pag.metodopago_id ORDER BY pag.id DESC";
+		$sql="SELECT pag.id AS complementoID,pag.fechaPago,pag.folioFiscal,det.total,pag.banco,pag.formadePago,pag.pagoPDF,pag.pagoXML,pag.pagoPDFCancelado,pag.pagoXMLCancelado,pag.statusPago,det.facturasRelacionadas,pag.cliente_id,IFNULL(a.display_name,cli.razonSocial) AS nombreCliente,IFNULL(met.nombre,pag.formadePago) AS nombreMetodo FROM complementos pag LEFT JOIN datos_fiscales cli ON pag.cliente_id=cli.cliente_id LEFT JOIN wp_users a ON a.ID=pag.cliente_id LEFT JOIN metodopagos met ON met.id=pag.formadePago INNER JOIN (SELECT complemento_id,GROUP_CONCAT(DISTINCT factura_id SEPARATOR ', ') AS facturasRelacionadas,SUM(estePago) AS total FROM complementoDetalles GROUP BY complemento_id) det ON det.complemento_id=pag.id GROUP BY pag.id ORDER BY pag.id DESC";
 		return ejecutarConsulta($sql);
 	}
 
