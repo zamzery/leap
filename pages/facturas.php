@@ -118,7 +118,8 @@ if ($_SESSION['facturasver']==1){
 								<label>Fecha Compromiso Pago:</label>
 								<div class="input-group date" id="fechaCompromiso" data-target-input="nearest">
 									<input type="text" class="form-control datetimepicker-input"
-										data-target="#fechaCompromiso" id="fechaCompromisoInput" />
+										data-target="#fechaCompromiso" id="fechaCompromisoInput"
+										name="fechaCompromiso" />
 									<div class="input-group-text" data-target="#fechaCompromiso"
 										data-toggle="datetimepicker">
 										<i class="fa fa-calendar"></i>

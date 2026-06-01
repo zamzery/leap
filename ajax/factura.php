@@ -78,6 +78,11 @@ switch ($_GET["op"]){
 		echo $rspta ? "Factura Cancelada" : "La factura no se pudo cancelar";
 	break;
 
+	case 'retimbrar':
+		$rspta=$facturas->retimbrar($facturaID);
+		echo $rspta ? "Factura reiniciada para timbrado" : "La factura no se pudo reiniciar";
+	break;
+
 	case 'copiaFactura':
 		$rspta=$facturas->copiaFactura($facturaID,$cliente_id);
 		echo $rspta ? "Factura Duplicada" : "La factura no se pudo duplicar";
@@ -86,7 +91,7 @@ switch ($_GET["op"]){
 	case 'select_factura':
 		$rspta = $facturas->select_factura();
 		while ($reg = $rspta->fetch_object()){
-			echo '<option data-total="'.$reg->total.'" data-uuid="'.$reg->uuid.'" value="'.$reg->uuid.'">'.$reg->facturaID.' '.$reg->serie.' - '.$reg->cliente.' - '.$reg->razonSocial.'</option>';
+			echo '<option data-total="'.$reg->total.'" data-uuid="'.$reg->uuid.'" value="'.$reg->uuid.'">'.$reg->facturaID.' '.$reg->serie.' - '.$reg->nombreCliente.' - '.$reg->razonSocial.'</option>';
 		}
 	break;
 
@@ -198,7 +203,7 @@ switch ($_GET["op"]){
 				<td style="text-align:center;"><button type="button" class="btn btn-danger btn-sm" onclick="eliminarDetalle('.$reg->id.')"><i class="fa fa-close"></i></button><input type="hidden" value="'.$reg->id.'" id="contador'.$reg->id.'" name="contador_actual[]"></td>
 
 			//Nombre Producto
-				<td><input type="hidden" name="producto_id[]" id="producto_id'.$reg->id.'" value="'.$reg->producto_id.'">'.$reg->nombreProducto.' '.$medidas.'</td>
+				<td><input type="hidden" name="producto_id[]" id="producto_id'.$reg->id.'" value="'.$reg->producto_id.'">'.$reg->nombreProducto.' <small class="text-muted">'.$reg->nombreUnidad.'</small></td>
 	
 			//Descripción
 				<td style="width:210px;"><textarea style="width:210px;" name="descripcion[]" id="descripcion'.$reg->id.'">'.$reg->descripcion.'</textarea></td>
@@ -250,9 +255,9 @@ switch ($_GET["op"]){
 			$icono = (empty($reg->nombrePDF))? '<i class="fa-solid fa-pencil fa-fw"></i>':'<i class="fa-solid fa-eye fa-fw"></i>';
 			$botonMostrarFactura = '<button title="Ver Factura" class="btn btn-warning btn-sm" onclick="mostrar('.$reg->facturaID.')">'.$icono.'</button>';
 			$botonEmail=($reg->emailEnviado=='1')? '<a data-bs-toggle="modal" data-bs-target="#enviaFactura"><button title="Enviar factura al cliente" class="btn btn-success btn-sm" onclick="mostrarEmailsFactura('.$reg->facturaID.')"><i class="fa fa-envelope" aria-hidden="true"></i></button></a> ' : '<a data-bs-toggle="modal" data-bs-target="#enviaFactura"><button title="Enviar factura al cliente" class="btn btn-dark btn-sm" onclick="mostrarEmailsFactura('.$reg->facturaID.')"><i class="fa fa-envelope" aria-hidden="true"></i></button></a> ';
-			$pagada = (empty($reg->nombrePDF) || (($reg->status=='Pagada' || $reg->metodoPago=='PPD') && ($reg->status!='Pagada' || $reg->status!='Cancelada')))? '<a class="dropdown-item" style="color:DarkGray;" href="#" disabled><i class="fa-solid fa-check espaciado-icn"></i> Pagada</a>' : '<a class="dropdown-item text-success" href="#" onclick="pagada('.$reg->facturaID.')"><i class="fa-solid fa-check espaciado-icn"></i> Pagada</a>';
+			$pagada = (empty($reg->nombrePDF) || $reg->status=='Pagada' || $reg->status=='Cancelado' || $reg->metodoPago=='PPD')? '<a class="dropdown-item" style="color:DarkGray;" href="#" disabled><i class="fa-solid fa-check espaciado-icn"></i> Pagada</a>' : '<a class="dropdown-item text-success" href="#" onclick="pagada('.$reg->facturaID.')"><i class="fa-solid fa-check espaciado-icn"></i> Pagada</a>';
 			$copiar = (empty($reg->nombrePDF))? '<li><a class="dropdown-item" style="color:DarkGray;" href="#"><i class="fa-solid fa-copy"></i> Duplicar</a></li>' : '<li><a class="dropdown-item text-primary" href="#" onclick="modalCopiarFactura('.$reg->facturaID.','.$reg->cliente_id.')"><i class="fa-solid fa-copy"></i> Duplicar</a></li>';
-			$cancelar = (empty($reg->nombrePDF) || $reg->status=='Cancelada' || date("Ym", strtotime($reg->fecha)) < date('Ym'))? '<li><a class="dropdown-item" style="color:DarkGray;" href="#"><i class="fa-solid fa-xmark espaciado-icn"></i> Cancelar</a></li>' : '<li><a class="dropdown-item text-danger" href="#" onclick="modalCancelaFactura('.$reg->facturaID.','.$reg->cliente_id.')"><i class="fa-solid fa-xmark espaciado-icn"></i> Cancelar</a></li>';
+			$cancelar = (empty($reg->nombrePDF) || $reg->status=='Cancelado' || date("Ym", strtotime($reg->fecha)) < date('Ym'))? '<li><a class="dropdown-item" style="color:DarkGray;" href="#"><i class="fa-solid fa-xmark espaciado-icn"></i> Cancelar</a></li>' : '<li><a class="dropdown-item text-danger" href="#" onclick="modalCancelaFactura('.$reg->facturaID.','.$reg->cliente_id.')"><i class="fa-solid fa-xmark espaciado-icn"></i> Cancelar</a></li>';
 			$timbrarFactura = (empty($reg->nombrePDF))? '<li><a class="dropdown-item" href="#" onclick="timbra('.$reg->facturaID.')"><i class="fa-solid fa-gear espaciado-icn"></i> Timbrar Factura</a></li>' : '<li><a class="dropdown-item" style="color:DarkGray;" href="#"><i class="fa-solid fa-gear espaciado-icn"></i> Timbrar Factura</a></li>';
 			$linkMostrar = '<button class="btn btn-link" title="Mostrar Curso" onclick="mostrar('.$reg->facturaID.')">'.$reg->facturaID.'-'.$reg->serie.' '.$metodoPago.'</button>';
 
@@ -274,8 +279,8 @@ switch ($_GET["op"]){
 				"0"=>$linkMostrar,
 				"1"=>date("Y-m-d", strtotime($reg->fecha)),
 				"2"=>$reg->nombreCliente,
-				"3"=>'$ '.number_format($total,2,'.',','),
-				"4"=>'$ '.number_format($pagado,2,'.',','),
+				"3"=>'$'.number_format($total,2,'.',','),
+				"4"=>'$'.number_format($pagado,2,'.',','),
 				"5"=>$saldo,
 				"6"=>(isset($reg->nombrePDFCancelado) AND $reg->nombrePDFCancelado!='')? '<a href="'.$reg->nombrePDFCancelado.'" target="_blank"><img class="img-thumbnail" width="30" height="30" src="../public/images/pdf-file.png"></a> <a href="'.$reg->nombreXMLCancelado.'" download target="_blank"><img class="img-thumbnail" width="30" height="30" src="../public/images/xml-file.png"></a>' : ((empty($reg->nombrePDF))? '<span style="display:none;">0</span><img class="img-thumbnail" style="filter: grayscale(100%);opacity: 0.5;" width="30" height="30" src="../public/images/pdf-file.png"> <img class="img-thumbnail" style="filter: grayscale(100%);opacity: 0.5;" width="30" height="30" src="../public/images/xml-file.png">':'<span style="display:none;">1</span><a href="'.$reg->nombrePDF.'" target="_blank"><img class="img-thumbnail" width="30" height="30" src="../public/images/pdf-file.png"></a> <a href="'.$reg->nombreXML.'" download target="_blank"><img class="img-thumbnail" width="30" height="30" src="../public/images/xml-file.png"></a>'),
 				"7"=>'<button type="button" class="btn btn-warning btn-sm" onclick="mostrarPagos('.$reg->facturaID.')"><i class="fas fa-search"></i> Pagos</button>',
@@ -297,12 +302,13 @@ switch ($_GET["op"]){
 		$data= Array();
 
 		while ($reg=$rspta->fetch_object()){
+			$nombreProducto=htmlspecialchars(addslashes($reg->nombreProducto), ENT_QUOTES, 'UTF-8');
 			$data[]=array(
 				"0"=>$reg->id,
 				"1"=>$reg->nombreProducto,
 				"2"=>$reg->descripcion,
 				"3"=>'$'.number_format($reg->precioVenta,2,'.',','),
-				"4"=>'<button type="button" class="btn btn-warning btn-sm" onclick="agregarDetalle(\''.$reg->id.'\',\''.$reg->nombreProducto.'\',\''.$reg->precioVenta.'\')"><span class="fa fa-plus"></span></button>',
+				"4"=>'<button type="button" class="btn btn-warning btn-sm" onclick="agregarDetalle(\''.$reg->id.'\',\''.$nombreProducto.'\',\''.$reg->precioVenta.'\')"><span class="fa fa-plus"></span></button>',
 			);
 		}
 		$results = array(
@@ -366,8 +372,8 @@ switch ($_GET["op"]){
 			$LugarExpedicion 		= "44460"; 				// Lugar de expedición (código postal) Prueba: 44960
 			$usoCfdi		 		= $reg->usoCfdi;		// Uso del CFDI que le dará el cliente
 			$moneda 				= $reg->moneda; 		// Moneda
-			$cliente 				= ($RFC_Recep=='XEXX010101000' || $RFC_Recep=='XAXX010101000')? ' - '.$reg->nombreCliente : '';
 			$RFC_Recep 		 		= $reg->rfcCliente; // 9.1 RFC del Receptor
+			$cliente 				= ($RFC_Recep=='XEXX010101000' || $RFC_Recep=='XAXX010101000')? ' - '.$reg->nombreCliente : '';
 			$numeroInterior			= ($reg->num_int)? ', Int. '.$reg->num_int : '';
 			$direccion_recep 		= $reg->calle.' No. '.$reg->num_ext.''.$numeroInterior.', '.$reg->colonia.', '.$reg->cp.' '.$reg->poblacion.', '.$reg->edoPais;		 // 9.5 Dirección a mostrar en el PDF como referencia 
 			$receptor_rs 	 		= ($RFC_Recep=='XEXX010101000' || $RFC_Recep=='XAXX010101000')? decodificar_utf8('PÚBLICO EN GENERAL') : $reg->razonSocial;		// 9.4 Nombre o razón social

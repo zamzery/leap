@@ -83,7 +83,7 @@ function init() {
 	} );
 
 	$( "#facturaRelacionada" ).on( "change", function () {
-		var total_fac = $( this ).children( 'option:selected' ).data( 'total_fac' );
+		var total_fac = $( this ).children( 'option:selected' ).data( 'total' );
 		$( '#totalFacturaRelacionada' ).val( total_fac );
 		$( '#descuento' ).val( total_fac );
 		var uuid = $( this ).children( 'option:selected' ).data( 'uuid' );
@@ -173,7 +173,7 @@ function init() {
 			$( '#formadePago' ).val( '99' );
 			$( '#formadePago' ).selectpicker( 'refresh' );
 		} else {
-			var formapago = $( "#cliente_id" ).children( 'option:selected' ).data( 'formadepago' );
+			var formapago = $( "#cliente_id" ).children( 'option:selected' ).data( 'formapago' );
 			$( '#formadePago' ).val( formapago );
 			$( '#formadePago' ).selectpicker( 'refresh' );
 		}
@@ -310,12 +310,12 @@ function listar() {
 			}
 		},
 		"columnDefs": [
-			{"width": "80px", "targets": 0},
+			{"width": "90px", "targets": 0},
 			{"type": "natural", "targets": 0},
 			{"width": "65px", "targets": [ 1, 8 ]},
 			{"width": "85px", "targets": [ 6, 7 ]},
 			{"width": "115px", "targets": [ 2, 4, 5, 6 ]},
-			{"width": "130px", "targets": 9},
+			{"width": "160px", "targets": 9},
 			{"className": "text-center", "targets": [ 0, 1, 2, 7, 8, 9 ]},
 			{"className": "text-end", "targets": [ 4, 5, 6 ]},
 		],

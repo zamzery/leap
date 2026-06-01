@@ -252,7 +252,7 @@ Class Pedido {
 			$sql_envios="INSERT INTO pedidosDetalles (pedido_id,producto_id,variante_id,descripcion,cantidad,precioVenta) 
 			SELECT '$pedidoIDnew', 
 				15423 AS producto_id, 
-				0 AS variante_id, 
+				15423 AS variante_id, 
 				ship.order_item_name AS descripcion, 
 				1 AS cantidad, 
 				ship_cost.meta_value AS precioVenta 
