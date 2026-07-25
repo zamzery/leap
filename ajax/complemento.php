@@ -35,6 +35,7 @@ $Fact_NoFact=isset($_POST["Fact_NoFact"])? limpiarCadena($_POST["Fact_NoFact"]):
 $razonSocial=isset($_POST["razonSocial"])? limpiarCadena($_POST["razonSocial"]):"";
 $folioFiscal=isset($_POST["folioFiscal"])? limpiarCadena($_POST["folioFiscal"]):"";
 $vendedor2=isset($_POST["vendedor2"])? limpiarCadena($_POST["vendedor2"]):"";
+$cliente2=isset($_POST["cliente2"])? limpiarCadena($_POST["cliente2"]):"";
 
 //Cancela Complementos
 $folioSustitucion=isset($_POST["folioSustitucion"])? limpiarCadena($_POST["folioSustitucion"]):"";
@@ -56,7 +57,9 @@ switch ($_GET["op"]){
 		$respuestaServer = false;
 		$respuesta = true;
 		$rspta=$pagos->timbra($complementoID);
+		$datosPagoEncontrados = false;
 		while ($reg = $rspta->fetch_object()){
+			$datosPagoEncontrados = true;
 			/// 4. DATOS GENERALES DE LA FACTURA //////////////////////////////////////////////
 			$fact_serie         = 'P';                                 // 4.1 Número de serie
 			$fact_folio         = $reg->complementoID;               // 4.2 Número de folio
@@ -87,6 +90,10 @@ switch ($_GET["op"]){
 			$domicilioFiscalReceptor = $reg->cp;
 			
 			$direccion_recep    = $reg->calle.' No. '.$reg->num_ext.''.$reg->num_int.', '.$reg->colonia.', '.$reg->cp.' '.$reg->poblacion.', '.$reg->edoPais; // 8.5 Dirección para colocar en el PDF
+		}
+		if (!$datosPagoEncontrados) {
+			echo "No se encontraron datos fiscales para timbrar el pago";
+			break;
 		}
 		$rspta ? $respuesta : $respuesta = false;
 
