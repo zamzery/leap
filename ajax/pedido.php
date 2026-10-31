@@ -145,7 +145,7 @@ switch ($_GET["op"]){
 				//Subtotal
 				<td style="width:140px;!important;text-align:right;">
 					$<span id="subtotal_html'.$reg->producto_id.'">'.number_format($reg->precioVenta*$reg->cantidad, 2, '.', ',').'</span>
-					<input type="hidden" class="form-control" name="subtotal[]" id="subtotal'.$reg->producto_id.'" value="'.number_format($reg->precioVenta, 2, '.', '').'">
+					<input type="hidden" class="form-control" name="subtotal[]" id="subtotal'.$reg->producto_id.'" value="'.number_format($reg->precioVenta*$reg->cantidad, 2, '.', '').'">
 				</td>
 				</tr>';
 				$precioVenta=floatval(str_replace(',','',$reg->precioVenta*$reg->cantidad));

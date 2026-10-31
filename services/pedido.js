@@ -199,6 +199,7 @@ function mostrar( pedidoID ) {
 
 	$.post( "../ajax/pedido.php?op=mostrarDetalles", {pedidoID: pedidoID}, function ( data, statusUsuario ) {
 		$("#detalles").html(data);
+		modificarTotales();
 	});
 }
 
@@ -242,6 +243,7 @@ function mostrar_pedido( pedidoID ) {
 
 	$.post( "../ajax/pedido.php?op=mostrarDetalles_pedido", {pedidoID: pedidoID}, function ( data, statusUsuario ) {
 		$( "#detalles" ).html( data );
+		modificarTotales();
 	} );
 }
 
@@ -450,11 +452,10 @@ function modificarSubTotales(id) {
 
 function modificarTotales() {
 	let totales = 0;
-	let tot = document.getElementsByName("subtotal[]");
+	let tot = document.querySelectorAll( '#detalles [name="subtotal[]"]' );
 	for (let i = 0; i < tot.length; i++) {
 		totales += parseFloat( tot[i].value );
 	}
-	console.log( totales );
 	$('#grantotal').html( totales.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'));
 }
 
